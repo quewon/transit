@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body.pointing canvas {
+            cursor: pointer;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .nametag {
+            position: absolute;
+            translate: -50% .5em;
+            pointer-events: none;
+            background: white;
+            display: none;
+        }
+
+        .location {
+            position: absolute;
+            background: white;
+            border: 1px solid black;
+            padding: .5em;
+            translate: -50% calc(-100% - 1em);
+        }
+        .location img {
+            width: 10rem;
+            aspect-ratio: 1;
+        }
+
+        .actions-container {
+            display: flex;
+            width: 100%;
+            flex-wrap: nowrap;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+            flex-grow: 1;
+        }
+
+        figure {
+            margin: 0;
+            margin-bottom: 4px;
+        }
+        figure > div {
+            position: relative;
+            line-height: 0;
+        }
+        figure .buttons {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            padding: .5em;
+            box-sizing: border-box;
+            text-align: right;
+        }
+        figure .buttons button {
+            border: none;
+        }
+
+        button {
+            background: white;
+            border: 1px solid black;
+            border-radius: 0;
+            padding: 2px 5px;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+        }
+        button:hover {
+            background: yellow;
+        }
+
+        #route {
+            height: fit-content;
+        }
+        .floater {
+            pointer-events: auto;
+            background: white;
+            border-radius: 1em;
+            box-shadow: 0 0 3px rgba(0, 0, 0, .2);
+            padding: 5px;
+        }
+        #route-data, #segment-data {
+            display: flex;
+            flex-wrap: nowrap;
+            box-sizing: border-box;
+            gap: 1em;
+            width: fit-content;
+            align-items: center;
+        }
+        #route-data *, #segment-data * {
+            height: fit-content;
+        }
+        .info, .info a {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .info a span {
+            width: fit-content;
+        }
+        .duration-estimate {
+            margin-left: 1em;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .segments {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .segment {
+            position: relative;
+            text-align: center;
+            line-height: 0;
+        }
+
+        #route:has(div.empty) {
+            display: none;
+        }
+
+        input {
+            font-family: inherit;
+            font-style: inherit;
+        }
+
+        header {
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            padding: 1em;
+            box-sizing: border-box;
+            gap: 1em;
+        }
+
+        #search-container {
+            height: fit-content;
+            width: 24px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            transition: width 400ms, box-shadow 400ms;
+        }
+        #search-container:has(#search:focus) {
+            width: 100%;
+        }
+        #segment-data, 
+        #route:has(.selected),
+        #search-container:has(#search:focus) {
+            box-shadow: 0 0 2px rgba(0, 0, 255, 1);
+        }
+        #search {
+            pointer-events: none;
+            font-family: inherit;
+            position: relative;
+            width: 0;
+            padding: 0;
+            height: fit-content;
+            border: none;
+            transition: margin 100ms;
+        }
+        #search:focus {
+            outline: none;
+            pointer-events: auto;
+            width: 100%;
+            margin: 0 5px;
+        }
+
+        .iconbutton {
+            border: none;
+            padding: 0;
+            line-height: 0;
+        }
+        .iconbutton, .iconbutton:hover {
+            background: transparent;
+        }
+        .iconbutton img {
+            width: fit-content;
+            transition: scale 100ms;
+        }
+        .iconbutton.location img {
+            scale: .9;
+        }
+        .iconbutton:hover img,
+        .iconbutton.selected img {
+            scale: 1.1;
+        }
+        .segments:has(.iconbutton.selected) .iconbutton {
+            opacity: .3;
+        }
+        .segments:has(.iconbutton.selected) .iconbutton.selected {
+            opacity: 1;
+        }
+
+        #go-button {
+            margin-top: 1em;
+        }
+
+        aside {
+            position: fixed;
+            bottom: 1em;
+            right: 1em;
+            display: flex;
+            flex-direction: column;
+            gap: .5em;
+        }
+
+        aside > div {
+            height: fit-content;
+            line-height: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    
+    <canvas id="canvas"></canvas>
+
+    <div id="map">
+
+    </div>
+
+    <aside>
+        <div id="current-location" class="floater hidden">
+            <button class="iconbutton" onclick="player.follow()">
+                <img src="res/icons/my-location.svg" title="jump to current location">
+            </button>
+        </div>
+
+        <div id="current-player-route" class="floater hidden">
+            <button class="iconbutton" onclick="set_current_route(player.route)">
+                <img src="res/icons/plane-black.svg" title="show current route">
+            </button>
+        </div>
+    </aside>
+
+    <header>
+        <div id="route-data" class="floater hidden">
+            <button class="iconbutton" onclick="set_current_route()">
+                <img src="res/icons/close.svg" title="clear route">
+            </button>
+            <div class="info">
+                <a>
+                    <img src="res/icons/circle.svg">
+                    <span>location</span>
+                </a>
+                <img src="res/icons/dots-horizontal.svg">
+                <a>
+                    <img src="res/icons/location-pin.svg">
+                    <span>location</span>
+                </a>
+                <div class="duration-estimate"></div>
+            </div>
+        </div>
+        <div id="segment-data" class="floater hidden">
+            <button class="iconbutton" onclick="current_route.focused_segment.unfocus()">
+                <img src="res/icons/back-arrow.svg" title="back to route">
+            </button>
+            <div class="floater info"></div>
+        </div>
+        <div style="display: flex; gap: 1em; height: 100%;">
+            <div id="route" class="floater hidden">
+                <div class="segments"></div>
+                <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
+                    <img src="res/icons/plane.svg" title="go!">
+                </button>
+            </div>
+            <div id="search-container" class="floater">
+                <button class="iconbutton" onclick="search.focus()">
+                    <img src="res/icons/search.svg">
+                </button>
+                <input id="search" type="text">
+            </div>
+        </div>
+    </header>
+
+    <template id="location-menu">
+        <div class="location hidden">
+            <figure>
+                <figcaption>location</figcaption>
+                <div>
+                    <img src="res/locations/default.jpg" alt="photo of location">
+                    <div class="buttons">
+                        <!-- <button>buses</button>
+                        <button>station timetable</button> -->
+                    </div>
+                </div>
+            </figure>
+            <div class="actions-container">
+                <div class="actions">
+                    <button class="walk iconbutton">
+                        <img src="res/icons/walk.svg" title="walk">
+                    </button>
+                    <button class="bus iconbutton">
+                        <img src="res/icons/bus.svg" title="bus">
+                    </button>
+                    <button class="train iconbutton">
+                        <img src="res/icons/train.svg" title="train">
+                    </button>
+                    <button class="car iconbutton">
+                        <img src="res/icons/car.svg" title="car">
+                    </button>
+                </div>
+                <button class="route iconbutton">
+                    <img src="res/icons/route.svg" title="route from here">
+                </button>
+            </div>
+        </div>
+    </template>
+    
+</body>
+
+<script src="js/util.js"></script>
+<script src="js/location.js"></script>
+<script src="js/route.js"></script>
+<script src="js/guy.js"></script>
+<script src="js/game.js"></script>
+<script>
+    init();
+</script>
+
+</html>

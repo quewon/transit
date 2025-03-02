@@ -1,0 +1,329 @@
+function set_current_route(route) {
+    if (current_route && current_route.focused_segment) {
+        current_route.focused_segment.unfocus();
+    }
+    current_route = route;
+    if (route) {
+        if (route.is_tentative || route.is_locked) {
+            ui.gobutton.classList.add("hidden");
+        } else {
+            ui.gobutton.classList.remove("hidden");
+        }
+        ui.route.classList.remove("hidden");
+        ui.routedata.classList.remove("hidden");
+        ui.routesegments.replaceWith(route.segments_element);
+        ui.routesegments = route.segments_element;
+        ui.routeinfo.replaceWith(route.info_element);
+        ui.routeinfo = route.info_element;
+        if (route.guy) {
+            route.guy.follow();
+        }
+        if (route == player.route) {
+            ui.playerroute.classList.add("hidden");
+        }
+    } else {
+        ui.route.classList.add("hidden");
+        ui.routedata.classList.add("hidden");
+        ui.segmentdata.classList.add("hidden");
+        route_location = null;
+    }
+
+    if (player.route && route != player.route) {
+        ui.playerroute.classList.remove("hidden");
+    }
+}
+
+class Route {
+    segments = [];
+    is_tentative = false;
+    is_locked = false;
+    focused_segment;
+    duration;
+
+    segments_element;
+    info_element;
+    info_anchors;
+
+    constructor(segments) {
+        this.segments_element = document.createElement("div");
+        this.segments_element.className = "segments";
+        this.segments_element.classList.add("empty");
+
+        let info = document.createElement("div");
+        info.className = "info";
+        let icon = document.createElement("img");
+        icon.src = "res/icons/dots-horizontal.svg";
+        this.info_anchors = [
+            route_location ? route_location.anchor_element.cloneNode(true) : document.createElement("a"),
+            route_location ? route_location.anchor_element.cloneNode(true) : document.createElement("a")
+        ];
+        info.appendChild(this.info_anchors[0]);
+        info.appendChild(icon);
+        info.appendChild(this.info_anchors[1]);
+        this.duration_element = document.createElement("div");
+        this.duration_element.className = "duration-estimate";
+        info.appendChild(this.duration_element);
+        this.info_element = info;
+
+        if (segments) {
+            for (let segment of segments) {
+                this.add_segment(segment);
+            }
+        }
+    }
+
+    update_duration() {
+        let total = 0;
+        for (let segment of this.segments) {
+            total += segment.duration;
+        }
+        this.duration = total;
+        this.duration_element.textContent = get_duration_string(this.duration);
+    }
+
+    add_segment(segment) {
+        if (this.segments.length == 0) {
+            let clone = segment.start.anchor_element.cloneNode(true);
+            this.info_anchors[0].replaceWith(clone);
+            this.info_anchors[0] = clone;
+            clone = segment.end.anchor_element.cloneNode(true);
+            this.info_anchors[1].replaceWith(clone);
+            this.info_anchors[1] = clone;
+        } else {
+            let clone = segment.end.anchor_element.cloneNode(true);
+            this.info_anchors[1].replaceWith(clone);
+            this.info_anchors[1] = clone;
+        }
+
+        this.segments.push(segment);
+        this.segments_element.appendChild(segment.element);
+        this.segments_element.classList.remove("empty");
+        segment.route = this;
+
+        this.update_duration();
+    }
+
+    remove_last_segment() {
+        let last_segment = this.segments.pop();
+        route_location = last_segment.start;
+        this.segments_element.lastElementChild.remove();
+        if (this.segments.length == 0) this.segments_element.classList.add("empty");
+
+        this.update_duration();
+    }
+
+    draw(color) {
+        context.strokeStyle = color || "blue";
+        for (let segment of this.segments) {
+            segment.draw_path(this.is_tentative);
+        }
+
+        for (let segment of this.segments) {
+            segment.start.draw_on_map();
+            segment.end.draw_on_map();
+        }
+
+        if (this.segments.length > 0) {
+            this.start().draw_on_map();
+            let end_location = this.segments[this.segments.length - 1].end;
+
+            if (color == "black") {
+                draw_pin(icons["location-pin-black"], end_location.x, end_location.y);
+            } else {
+                draw_pin(icons["location-pin"], end_location.x, end_location.y);
+            }
+        }
+    }
+
+    start() {
+        if (this.segments.length > 0) {
+            return this.segments[0].start;
+        }
+        return null;
+    }
+
+    end() {
+        return this.segments[this.segments.length - 1].end;
+    }
+
+    contains(location) {
+        for (let segment of this.segments) {
+            if (segment.start == location || segment.end == location) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    position_at_time(t) {
+        let position_segment;
+        let _t = 0;
+        for (let segment of this.segments) {
+            if (_t + segment.duration > t) {
+                t -= _t;
+                position_segment = segment;
+                break;
+            }
+            _t += segment.duration;
+        }
+
+        if (_t >= this.duration) {
+            return v2_copy(this.segments[this.segments.length - 1].end);
+        }
+
+        _t = 0;
+        let path = position_segment.path;
+        for (let i=0; i<path.length-1; i++) {
+            let distance = v2_distance(path[i], path[i+1]);
+            if (_t + distance > t) {
+                return v2_lerp(path[i], path[i+1], t/distance);
+            }
+        }
+    }
+}
+
+class RouteSegment {
+    route;
+    start;
+    end;
+    path;
+    center;
+    duration;
+
+    element;
+    focused = false;
+
+    info_element;
+    button;
+
+    constructor(start, end) {
+        this.start = start;
+        this.end = end;
+        this.center = v2_lerp(end, start, .5);
+        this.element = document.createElement("div");
+        this.element.classList.add("segment");
+        this.calculate_path();
+        this.calculate_duration();
+    }
+
+    calculate_path() {
+        this.path = [];
+    }
+
+    calculate_duration() {
+        let total = 0;
+        for (let i=0; i<this.path.length-1; i++) {
+            total += v2_distance(this.path[i], this.path[i+1]);
+        }
+        this.duration = total;
+    }
+
+    init_element(type) {
+        let info = document.createElement("div");
+        info.className = "info";
+        info.appendChild(this.start.anchor_element.cloneNode(true));
+        info.innerHTML += "<img src='res/icons/dots-horizontal.svg'>";
+        info.appendChild(this.end.anchor_element.cloneNode(true));
+        let duration = document.createElement("div");
+        duration.className = "duration-estimate";
+        duration.textContent = get_duration_string(this.duration);
+        info.appendChild(duration);
+        this.info_element = info;
+
+        let button = document.createElement("button");
+        button.className = "iconbutton";
+        let img = document.createElement("img");
+        img.src = "res/icons/"+type+".svg";
+        button.appendChild(img);
+        
+        this.element.appendChild(button);
+
+        button.onclick = function() {
+            if (this.focused) {
+                this.unfocus();
+            } else {
+                this.focus();
+            }
+        }.bind(this);
+        this.button = button;
+    }
+
+    focus() {
+        if (this.route.focused_segment) {
+            this.route.focused_segment.unfocus();
+        }
+        this.focused = true;
+        this.route.focused_segment = this;
+        ui.segmentdata.classList.remove("hidden");
+        ui.routedata.classList.add("hidden");
+        ui.segmentinfo.replaceWith(this.info_element);
+        ui.segmentinfo = this.info_element;
+        this.button.classList.add("selected");
+        jumpto(this.center);
+    }
+
+    unfocus() {
+        this.focused = false;
+        this.button.classList.remove("selected");
+        ui.segmentdata.classList.add("hidden");
+        ui.routedata.classList.remove("hidden");
+    }
+
+    draw_path(is_tentative) {
+        if (this.path.length == 0) return;
+
+        if (is_tentative) context.setLineDash([3]);
+        if (this.focused) context.lineWidth = 3;
+        
+        context.beginPath();
+        context.moveTo(this.path[0].x, this.path[0].y);
+        for (let i=1; i<this.path.length; i++) {
+            let point = this.path[i];
+            context.lineTo(point.x, point.y);
+        }
+        context.stroke();
+
+        if (is_tentative) context.setLineDash([]);
+        if (this.focused) context.lineWidth = 1;
+    }
+}
+
+class WalkSegment extends RouteSegment {
+    constructor(start, end) {
+        super(start, end);
+        this.init_element("walk");
+    }
+
+    calculate_path() {
+        this.path = [];
+        this.path.push(v2_copy(this.start));
+        this.path.push(v2_copy(this.end));
+    }
+}
+
+class CarSegment extends RouteSegment {
+    constructor(start, end) {
+        super(start, end);
+        
+        this.path.push(v2_copy(start));
+        this.path.push(v2_copy(end));
+    }
+}
+
+class BusSegment extends RouteSegment {
+    constructor(start, end) {
+        super(start, end);
+        
+        this.path.push(v2_copy(start));
+        this.path.push(v2_copy(end));
+    }
+}
+
+class TrainSegment extends Route {
+    constructor(start, end) {
+        super(start, end);
+        
+        this.path.push(v2_copy(start));
+        this.path.push(v2_copy(end));
+    }
+}
