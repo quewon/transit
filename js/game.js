@@ -18,7 +18,7 @@ const icons = load_images({
 
 var mouse = {
     x: Infinity, y: Infinity,
-    raw_x: Infinity, raw_y: Infinity,
+    screen_x: Infinity, screen_y: Infinity,
     down: false,
     just_pressed: false,
     just_released: false
@@ -48,9 +48,15 @@ function init() {
 
     window.onresize = resize;
     
-    canvas.onmousedown = canvas.ontouchstart = () => {
+    canvas.onmousedown = canvas.ontouchstart = e => {
         mouse.down = true;
         mouse.just_pressed = true;
+        if (e.touches) {
+            mouse.screen_x = e.touches[0].clientX;
+            mouse.screen_y = e.touches[0].clientY;
+            mousemove(e);
+            e.preventDefault();
+        }
     }
     document.onmouseup = document.ontouchend = window.onblur = () => {
         mouse.down = false;
@@ -167,8 +173,8 @@ function resize() {
 function mousemove(e) {
     let screen = {};
     if (e.touches) {
-        screen.x = e.touches[0].pageX;
-        screen.y = e.touches[0].pageY;
+        screen.x = e.touches[0].clientX;
+        screen.y = e.touches[0].clientY;
     } else {
         screen.x = e.pageX;
         screen.y = e.pageY;

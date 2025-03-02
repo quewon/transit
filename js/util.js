@@ -72,7 +72,7 @@ function canvas_to_screen(v2) {
 function jumpto(v2, offset) {
     if (following && v2 != following) following.unfollow();
     if (v2 != player) ui.locationbutton.classList.remove("hidden");
-    desired_map_offset = v2_add(v2_mul(v2, -1), offset || { x:0, y:0 });
+    desired_map_offset = v2_add(v2_mul(v2, -1 * window.devicePixelRatio), offset || { x:0, y:0 });
 }
 
 function v2_copy(v2) {
