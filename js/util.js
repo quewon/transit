@@ -37,6 +37,10 @@ function draw_pin(img, x, y) {
 
 //math
 
+function clamp(min, v, max) {
+    return Math.min(Math.max(v, min), max);
+}
+
 function lerp(a, b, t) {
     return (1-t) * a + t * b;
 }
@@ -59,20 +63,26 @@ function point_in_rect(point, rect) {
 
 //v2 
 
+function position_to_canvas(v2) {
+    return v2_mul(v2_add(v2, map_offset), map_zoom);
+}
+
+function canvas_to_position(v2) {
+    return v2_sub(v2_div(v2, map_zoom), map_offset);
+}
+
 function screen_to_canvas(v2) {
-    let offset = v2_add(screen_offset, map_offset);
-    return v2_div(v2_sub(v2_mul(v2, window.devicePixelRatio), offset), window.devicePixelRatio * map_zoom);
+    return v2_div(v2_sub(v2_mul(v2, window.devicePixelRatio), screen_offset), pixel_scale);
 }
 
 function canvas_to_screen(v2) {
-    let offset = v2_add(screen_offset, map_offset);
-    return v2_div(v2_add(v2_mul(v2, window.devicePixelRatio * map_zoom), offset), window.devicePixelRatio);
+    return v2_div(v2_add(v2_mul(v2, pixel_scale), screen_offset), window.devicePixelRatio);
 }
 
-function jumpto(v2, offset) {
+function jumpto(v2) {
     if (following && v2 != following) following.unfollow();
     if (v2 != player) ui.locationbutton.classList.remove("hidden");
-    desired_map_offset = v2_add(v2_mul(v2, -1 * window.devicePixelRatio * map_zoom), offset || { x:0, y:0 });
+    desired_map_offset = v2_mul(v2, -1);
 }
 
 function v2_copy(v2) {

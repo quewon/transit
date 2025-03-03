@@ -123,6 +123,10 @@
             align-items: center;
             gap: 2px;
         }
+        a {
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
         .info a span {
             width: fit-content;
         }
@@ -160,6 +164,7 @@
             top: 0;
             left: 0;
             height: 100%;
+            width: 100%;
             padding: var(--gap);
             box-sizing: border-box;
             gap: var(--gap);
@@ -210,9 +215,6 @@
         .iconbutton img {
             width: fit-content;
             transition: scale 100ms;
-        }
-        .iconbutton.location img {
-            scale: .9;
         }
         .iconbutton:hover img,
         .iconbutton.selected img {
@@ -359,6 +361,9 @@
                 </div>
                 <button class="route iconbutton">
                     <img src="res/icons/route.svg" title="route from here">
+                </button>
+                <button class="clear-route iconbutton hidden" onclick="set_current_route()">
+                    <img src="res/icons/close.svg" title="close route">
                 </button>
             </div>
         </div>

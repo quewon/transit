@@ -16,13 +16,7 @@ const icons = load_images({
     "location-pin-black": "res/icons/location-pin.svg"
 })
 
-var mouse = {
-    x: Infinity, y: Infinity,
-    screen_x: Infinity, screen_y: Infinity,
-    down: false,
-    just_pressed: false,
-    just_released: false
-};
+var mouse;
 var previous_tick;
 
 var guys = [];
@@ -39,25 +33,43 @@ var current_route;
 const MAP_RADIUS = 5;
 const MAP_INTERVAL = 50;
 const MAP_SMOOTH = .2;
+const MIN_ZOOM = .2;
+const MAX_ZOOM = 5;
 var screen_offset;
-var map_zoom;
+var pixel_scale;
+var map_zoom = 1;
 var map_offset = { x:0, y:0 };
 var desired_map_offset = { x:0, y:0 };
 
 function init() {
     // event listeners
 
+    window.addEventListener("wheel", e => {
+        map_zoom += e.deltaY/1000;
+        map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
+    })
+
     window.onresize = resize;
     
     canvas.onmousedown = canvas.ontouchstart = e => {
         if (e.touches) {
-            mouse.screen_x = e.touches[0].clientX;
-            mouse.screen_y = e.touches[0].clientY;
-            mousemove(e);
+            if (e.touches.length == 2) {
+                mouse.pinch = v2_distance(
+                    { x: e.touches[0].clientX, y: e.touches[0].clientY },
+                    { x: e.touches[1].clientX, y: e.touches[1].clientY }
+                );
+            } else if (e.touches.length == 1) {
+                mouse.screen_x = e.touches[0].clientX;
+                mouse.screen_y = e.touches[0].clientY;
+                mousemove(e);
+                mouse.down = true;
+                mouse.just_pressed = true;
+            }
             e.preventDefault();
+        } else {
+            mouse.down = true;
+            mouse.just_pressed = true;
         }
-        mouse.down = true;
-        mouse.just_pressed = true;
     }
     document.onmouseup = document.ontouchend = window.onblur = () => {
         mouse.down = false;
@@ -65,6 +77,7 @@ function init() {
     canvas.onmouseup = canvas.ontouchend = () => {
         if (!mouse.dragging) mouse.just_released = true;
         mouse.dragging = false;
+        mouse.pinch = null;
     }
     document.onmousemove = document.ontouchmove = mousemove;
 
@@ -133,19 +146,18 @@ function draw() {
     document.body.classList.remove("pointing");
     
     context.save();
-        let offset = v2_add(screen_offset, map_offset);
-        context.translate(offset.x, offset.y);
-        context.clearRect(-offset.x, -offset.y, canvas.width, canvas.height);
-        context.scale(window.devicePixelRatio * map_zoom, window.devicePixelRatio * map_zoom);
+        context.translate(screen_offset.x, screen_offset.y);
+        context.clearRect(-screen_offset.x, -screen_offset.y, canvas.width, canvas.height);
+        context.scale(pixel_scale, pixel_scale);
 
         // map
-        for (let y=0; y<=canvas.height; y+=MAP_INTERVAL) {
-            for (let x=0; x<=canvas.width; x+=MAP_INTERVAL) {
-                context.fillStyle = "rgba(0, 0, 0, .05)";
-                draw_circle(x - offset.x, y - offset.y, 2);
-                context.fill();
-            }
-        }
+        // context.fillStyle = "rgba(0, 0, 0, .1)";
+        // for (let y=-MAP_RADIUS; y<=MAP_RADIUS; y++) {
+        //     for (let x=-window.innerWidth/2 - offset.x/(window.devicePixelRatio*map_zoom); x<=window.innerWidth/2; x+=MAP_INTERVAL) {
+        //         draw_circle(x, y, 2);
+        //         context.fill();
+        //     }
+        // }
 
         for (let location of locations) {
             location.draw();
@@ -162,10 +174,10 @@ function draw() {
 //
 
 function resize() {
-    if (window.devicePixelRatio > 2) {
-        map_zoom = 1.7;
+    if (window.devicePixelRatio >= 2) {
+        pixel_scale = 3.4;
     } else {
-        map_zoom = 1;
+        pixel_scale = 1.17;
     }
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
@@ -191,7 +203,7 @@ function mousemove(e) {
         screen.y = e.pageY;
     }
 
-    let pos = screen_to_canvas(screen);
+    let p = canvas_to_position(screen_to_canvas(screen));
 
     if (mouse.down) {
         let delta = {
@@ -203,11 +215,21 @@ function mousemove(e) {
             if (following) following.unfollow();
             ui.locationbutton.classList.remove("hidden");
         }
-        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio));
+        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / map_zoom));
+    }
+
+    if (e.touches && mouse.pinch && e.touches.length == 2) {
+        let pinch = v2_distance(
+            { x: e.touches[0].clientX, y: e.touches[0].clientY },
+            { x: e.touches[1].clientX, y: e.touches[1].clientY }
+        );
+        let delta = pinch - mouse.pinch;
+        map_zoom += delta/1000;
+        map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
     }
     
-    mouse.x = pos.x;
-    mouse.y = pos.y;
+    mouse.x = p.x;
+    mouse.y = p.y;
     mouse.screen_x = screen.x;
     mouse.screen_y = screen.y;
 }

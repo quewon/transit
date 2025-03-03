@@ -1,21 +1,25 @@
 class Location {
-    name;
     x; y;
     r = 5;
     desired_r = 5;
     anchor_element;
 
-    constructor(x, y, name) {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.name = name || "location";
 
-        let anchor = document.createElement("a");
+        let anchor = document.createElement("button");
+        anchor.className = "iconbutton";
         let icon = document.createElement("img");
         icon.src = "res/icons/circle.svg";
         anchor.appendChild(icon);
-        anchor.innerHTML += this.name;
         this.anchor_element = anchor;
+    }
+
+    anchor() {
+        let clone = this.anchor_element.cloneNode(true);
+        clone.onclick = function() { jumpto(this) }.bind(this);
+        return clone;
     }
 
     draw_on_map() {
@@ -30,12 +34,13 @@ class Location {
         let dr = this.desired_r - this.r;
         this.r += dr/3;
 
-        draw_circle(this.x, this.y, this.r);
+        let p = position_to_canvas(this);
+        draw_circle(p.x, p.y, this.r);
 
-        if (player.route && player.route.contains(this)) {
-            context.fillStyle = "black";
-        } else if (current_route && current_route.contains(this) || this == route_location) {
+        if (current_route && current_route.contains(this) || this == route_location) {
             context.fillStyle = "blue";
+        } else if (player.route && player.route.contains(this)) {
+            context.fillStyle = "black";
         } else {
             context.fillStyle = "#00FF00";
         }
@@ -58,8 +63,12 @@ class StaticLocation extends Location {
     available_actions = ["walk"];
     touch_padding = MAP_INTERVAL/4;
 
-    constructor(x, y, name) {
-        super(x, y, name);
+    menu;
+    clear_route_button;
+    route_button;
+
+    constructor(x, y) {
+        super(x, y);
 
         // modify anchor
 
@@ -84,20 +93,15 @@ class StaticLocation extends Location {
                 this.go_via(action)
             }.bind(this);
         }
-        
-        menu.querySelector(".route").onclick = this.route_from_here.bind(this);
 
         ui.map.appendChild(menu);
         this.menu = menu;
-        this.menu_height = this.menu.getBoundingClientRect();
 
-        // create nametag
+        this.clear_route_button = menu.querySelector(".clear-route");
+        this.route_button = menu.querySelector(".route");
 
-        let nametag = document.createElement("div");
-        nametag.className = "nametag";
-        nametag.textContent = this.name;
-        ui.map.appendChild(nametag);
-        this.nametag = nametag;
+        this.clear_route_button.onclick = this.clear_route.bind(this);
+        this.route_button.onclick = this.route_from_here.bind(this);
     }
 
     go_via(action) {
@@ -137,17 +141,19 @@ class StaticLocation extends Location {
         this.deselect();
     }
 
+    clear_route() {
+        set_current_route();
+        this.deselect();
+    }
+
     draw() {
         if (this.mouseover()) document.body.classList.add("pointing");
 
-        let screen_position = canvas_to_screen(this);
+        let screen_position = canvas_to_screen(position_to_canvas(this));
 
         if (this.selected) {
             this.menu.style.left = screen_position.x + "px";
             this.menu.style.top = screen_position.y + "px";
-        } else {
-            this.nametag.style.left = screen_position.x + "px";
-            this.nametag.style.top = screen_position.y + "px";
         }
 
         this.draw_on_map();
@@ -184,9 +190,6 @@ class StaticLocation extends Location {
         if (route_location == this) {
             if (current_route) {
                 current_route.remove_last_segment();
-                if (current_route.segments.length == 0 && !current_route.is_tentative) {
-                    set_current_route();
-                }
             }
         }
         if (selected_location) selected_location.deselect();
@@ -194,15 +197,13 @@ class StaticLocation extends Location {
         selected_location = this;
 
         this.show_window();
-        this.nametag.classList.add("hidden");
-        jumpto(this, { x:0, y:canvas.height/5 });
+        jumpto(v2_add(this, { x:0, y:-canvas.height/5/map_zoom }));
     }
 
     deselect() {
         this.selected = false;
         selected_location = null;
         this.menu.classList.add("hidden");
-        this.nametag.classList.remove("hidden");
     }
 
     show_window() {
@@ -215,6 +216,14 @@ class StaticLocation extends Location {
             } else {
                 this.buttons[action].classList.add("hidden");
             }
+        }
+
+        if (current_route && current_route.is_tentative && current_route.start() == this) {
+            this.clear_route_button.classList.remove("hidden");
+            this.route_button.classList.add("hidden");
+        } else {
+            this.clear_route_button.classList.add("hidden");
+            this.route_button.classList.remove("hidden");
         }
     }
 

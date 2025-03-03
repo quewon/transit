@@ -54,8 +54,8 @@ class Route {
         let icon = document.createElement("img");
         icon.src = "res/icons/dots-horizontal.svg";
         this.info_anchors = [
-            route_location ? route_location.anchor_element.cloneNode(true) : document.createElement("a"),
-            route_location ? route_location.anchor_element.cloneNode(true) : document.createElement("a")
+            route_location ? route_location.anchor() : document.createElement("a"),
+            route_location ? route_location.anchor() : document.createElement("a")
         ];
         info.appendChild(this.info_anchors[0]);
         info.appendChild(icon);
@@ -83,16 +83,16 @@ class Route {
 
     add_segment(segment) {
         if (this.segments.length == 0) {
-            let clone = segment.start.anchor_element.cloneNode(true);
-            this.info_anchors[0].replaceWith(clone);
-            this.info_anchors[0] = clone;
-            clone = segment.end.anchor_element.cloneNode(true);
-            this.info_anchors[1].replaceWith(clone);
-            this.info_anchors[1] = clone;
+            let a = segment.start.anchor();
+            this.info_anchors[0].replaceWith(a);
+            this.info_anchors[0] = a;
+            a = segment.end.anchor()
+            this.info_anchors[1].replaceWith(a);
+            this.info_anchors[1] = a;
         } else {
-            let clone = segment.end.anchor_element.cloneNode(true);
-            this.info_anchors[1].replaceWith(clone);
-            this.info_anchors[1] = clone;
+            let a = segment.end.anchor();
+            this.info_anchors[1].replaceWith(a);
+            this.info_anchors[1] = a;
         }
 
         this.segments.push(segment);
@@ -105,9 +105,19 @@ class Route {
 
     remove_last_segment() {
         let last_segment = this.segments.pop();
-        route_location = last_segment.start;
-        this.segments_element.lastElementChild.remove();
-        if (this.segments.length == 0) this.segments_element.classList.add("empty");
+
+        if (current_route && current_route == this) {
+            if (!this.is_tentative && this.segments.length == 0) {
+                set_current_route();
+                return;
+            }
+        }
+
+        if (last_segment) {
+            route_location = last_segment.start;
+            this.segments_element.lastElementChild.remove();
+            if (this.segments.length == 0) this.segments_element.classList.add("empty");
+        }
 
         this.update_duration();
     }
@@ -125,7 +135,7 @@ class Route {
 
         if (this.segments.length > 0) {
             this.start().draw_on_map();
-            let end_location = this.segments[this.segments.length - 1].end;
+            let end_location = position_to_canvas(this.segments[this.segments.length - 1].end);
 
             if (color == "black") {
                 draw_pin(icons["location-pin-black"], end_location.x, end_location.y);
@@ -138,6 +148,8 @@ class Route {
     start() {
         if (this.segments.length > 0) {
             return this.segments[0].start;
+        } else if (this.is_tentative) {
+            return route_location;
         }
         return null;
     }
@@ -221,9 +233,9 @@ class RouteSegment {
     init_element(type) {
         let info = document.createElement("div");
         info.className = "info";
-        info.appendChild(this.start.anchor_element.cloneNode(true));
+        info.appendChild(this.start.anchor());
         info.innerHTML += "<img src='res/icons/dots-horizontal.svg'>";
-        info.appendChild(this.end.anchor_element.cloneNode(true));
+        info.appendChild(this.end.anchor());
         let duration = document.createElement("div");
         duration.className = "duration-estimate";
         duration.textContent = get_duration_string(this.duration);
@@ -276,10 +288,11 @@ class RouteSegment {
         if (this.focused) context.lineWidth = 3;
         
         context.beginPath();
-        context.moveTo(this.path[0].x, this.path[0].y);
+        let p0 = position_to_canvas(this.path[0]);
+        context.moveTo(p0.x, p0.y);
         for (let i=1; i<this.path.length; i++) {
-            let point = this.path[i];
-            context.lineTo(point.x, point.y);
+            let p = position_to_canvas(this.path[i]);
+            context.lineTo(p.x, p.y);
         }
         context.stroke();
 

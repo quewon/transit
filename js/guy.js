@@ -31,7 +31,8 @@ class Guy {
         }
 
         context.fillStyle = "red";
-        draw_circle(this.x, this.y, 4);
+        let p = position_to_canvas(this);
+        draw_circle(p.x, p.y, 4);
         context.fill();
     }
 
@@ -41,6 +42,8 @@ class Guy {
         }
 
         if (this.route) {
+            console.log(this.route, this.route.position_at_time(this.route_time));
+
             // calculate position on route
             this.route_time += delta/100;
             let position = this.route.position_at_time(this.route_time);
@@ -55,7 +58,7 @@ class Guy {
     }
 
     get_location() {
-        return this.location || new Location(this.x, this.y, "current");
+        return this.location || new Location(this.x, this.y);
     }
 
     follow() {
