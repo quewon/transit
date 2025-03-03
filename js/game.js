@@ -40,6 +40,7 @@ const MAP_RADIUS = 5;
 const MAP_INTERVAL = 50;
 const MAP_SMOOTH = .2;
 var screen_offset;
+var map_zoom;
 var map_offset = { x:0, y:0 };
 var desired_map_offset = { x:0, y:0 };
 
@@ -136,6 +137,7 @@ function draw() {
         context.translate(offset.x, offset.y);
         context.clearRect(-offset.x, -offset.y, canvas.width, canvas.height);
         context.scale(window.devicePixelRatio, window.devicePixelRatio);
+        context.scale(map_zoom, map_zoom);
 
         // map
         for (let y=0; y<=canvas.height; y+=MAP_INTERVAL) {
@@ -161,6 +163,7 @@ function draw() {
 //
 
 function resize() {
+    map_zoom = window.devicePixelRatio;
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
     canvas.style.width = window.innerWidth + "px";
@@ -192,7 +195,7 @@ function mousemove(e) {
             if (following) following.unfollow();
             ui.locationbutton.classList.remove("hidden");
         }
-        desired_map_offset = v2_add(desired_map_offset, delta);
+        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio));
     }
     
     mouse.x = pos.x;

@@ -61,18 +61,18 @@ function point_in_rect(point, rect) {
 
 function screen_to_canvas(v2) {
     let offset = v2_add(screen_offset, map_offset);
-    return v2_div(v2_sub(v2_mul(v2, window.devicePixelRatio), offset), window.devicePixelRatio);
+    return v2_div(v2_sub(v2_mul(v2, window.devicePixelRatio), offset), window.devicePixelRatio * map_zoom);
 }
 
 function canvas_to_screen(v2) {
     let offset = v2_add(screen_offset, map_offset);
-    return v2_div(v2_add(v2_mul(v2, window.devicePixelRatio), offset), window.devicePixelRatio);
+    return v2_div(v2_add(v2_mul(v2, window.devicePixelRatio * map_zoom), offset), window.devicePixelRatio);
 }
 
 function jumpto(v2, offset) {
     if (following && v2 != following) following.unfollow();
     if (v2 != player) ui.locationbutton.classList.remove("hidden");
-    desired_map_offset = v2_add(v2_mul(v2, -1 * window.devicePixelRatio), offset || { x:0, y:0 });
+    desired_map_offset = v2_add(v2_mul(v2, -1 * window.devicePixelRatio * map_zoom), offset || { x:0, y:0 });
 }
 
 function v2_copy(v2) {
