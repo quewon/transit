@@ -152,9 +152,13 @@ function draw() {
 
         // map
         // context.fillStyle = "rgba(0, 0, 0, .1)";
-        // for (let y=-MAP_RADIUS; y<=MAP_RADIUS; y++) {
-        //     for (let x=-window.innerWidth/2 - offset.x/(window.devicePixelRatio*map_zoom); x<=window.innerWidth/2; x+=MAP_INTERVAL) {
-        //         draw_circle(x, y, 2);
+        // for (let y=-window.innerHeight/2; y<=window.innerHeight/2; y+=MAP_INTERVAL * map_zoom) {
+        //     for (let x=-window.innerWidth/2; x<=window.innerWidth/2; x+=MAP_INTERVAL * map_zoom) {
+        //         draw_circle(
+        //             x - window.innerWidth/2, 
+        //             y - window.innerHeight/2, 
+        //             pixel_scale/2
+        //         );
         //         context.fill();
         //     }
         // }
@@ -215,7 +219,7 @@ function mousemove(e) {
             if (following) following.unfollow();
             ui.locationbutton.classList.remove("hidden");
         }
-        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / map_zoom));
+        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / pixel_scale / map_zoom));
     }
 
     if (e.touches && mouse.pinch && e.touches.length == 2) {
@@ -224,7 +228,7 @@ function mousemove(e) {
             { x: e.touches[1].clientX, y: e.touches[1].clientY }
         );
         let delta = pinch - mouse.pinch;
-        map_zoom += delta/1000;
+        map_zoom += delta/2000;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
     }
     

@@ -197,7 +197,7 @@ class StaticLocation extends Location {
         selected_location = this;
 
         this.show_window();
-        jumpto(v2_add(this, { x:0, y:-canvas.height/5/map_zoom }));
+        jumpto(v2_add(this, { x:0, y:-canvas.height/5/pixel_scale/map_zoom }));
     }
 
     deselect() {
