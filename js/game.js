@@ -49,14 +49,14 @@ function init() {
     window.onresize = resize;
     
     canvas.onmousedown = canvas.ontouchstart = e => {
-        mouse.down = true;
-        mouse.just_pressed = true;
         if (e.touches) {
             mouse.screen_x = e.touches[0].clientX;
             mouse.screen_y = e.touches[0].clientY;
             mousemove(e);
             e.preventDefault();
         }
+        mouse.down = true;
+        mouse.just_pressed = true;
     }
     document.onmouseup = document.ontouchend = window.onblur = () => {
         mouse.down = false;

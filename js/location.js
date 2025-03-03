@@ -60,6 +60,7 @@ class StaticLocation extends Location {
     selected = false;
     click_ready = false;
     available_actions = ["walk"];
+    touch_padding = MAP_INTERVAL/4;
 
     constructor(x, y, name) {
         super(x, y, name);
@@ -92,6 +93,7 @@ class StaticLocation extends Location {
 
         ui.map.appendChild(menu);
         this.menu = menu;
+        this.menu_height = this.menu.getBoundingClientRect();
 
         // create nametag
 
@@ -176,7 +178,7 @@ class StaticLocation extends Location {
     }
 
     mouseover() {
-        return v2_distance(mouse, this) <= this.r;
+        return v2_distance(mouse, this) <= this.r + this.touch_padding;
     }
 
     select() {
@@ -197,7 +199,7 @@ class StaticLocation extends Location {
 
         this.show_window();
         this.nametag.classList.add("hidden");
-        jumpto(this, { x:0, y:140 });
+        jumpto(this, { x:0, y:canvas.height/5 });
     }
 
     deselect() {
