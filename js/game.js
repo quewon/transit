@@ -136,8 +136,7 @@ function draw() {
         let offset = v2_add(screen_offset, map_offset);
         context.translate(offset.x, offset.y);
         context.clearRect(-offset.x, -offset.y, canvas.width, canvas.height);
-        context.scale(window.devicePixelRatio, window.devicePixelRatio);
-        context.scale(map_zoom, map_zoom);
+        context.scale(window.devicePixelRatio * map_zoom, window.devicePixelRatio * map_zoom);
 
         // map
         for (let y=0; y<=canvas.height; y+=MAP_INTERVAL) {
@@ -152,25 +151,34 @@ function draw() {
             location.draw();
         }
 
-        player.draw();
-
         if (current_route) {
             current_route.draw();
         }
+
+        player.draw();
     context.restore();
 }
 
 //
 
 function resize() {
-    map_zoom = window.devicePixelRatio;
+    if (window.devicePixelRatio > 2) {
+        map_zoom = 1.7;
+    } else {
+        map_zoom = 1;
+    }
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
     screen_offset = { x: canvas.width/2, y: canvas.height/2 };
-
-    context.font = "16px monospace";
+    mouse = {
+        x: Infinity, y: Infinity,
+        screen_x: Infinity, screen_y: Infinity,
+        down: false,
+        just_pressed: false,
+        just_released: false
+    };
 }
 
 function mousemove(e) {

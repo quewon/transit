@@ -32,31 +32,27 @@ class Location {
 
         draw_circle(this.x, this.y, this.r);
 
-        let is_start_location = current_route && current_route.start() == this;
+        if (player.route && player.route.contains(this)) {
+            context.fillStyle = "black";
+        } else if (current_route && current_route.contains(this) || this == route_location) {
+            context.fillStyle = "blue";
+        } else {
+            context.fillStyle = "#00FF00";
+        }
 
-        if (route_location == this || is_start_location) {
+        if (!this.is_static) {
+            context.strokeStyle = context.fillStyle;
             context.fillStyle = "white";
             context.fill();
-            if (current_route && !current_route.is_tentative && is_start_location) {
-                context.strokeStyle = "red";
-            } else {
-                context.strokeStyle = "blue";
-            }
             context.stroke();
         } else {
-            if (player.route && player.route.contains(this)) {
-                context.fillStyle = "black";
-            } else if (current_route && current_route.contains(this)) {
-                context.fillStyle = "blue";
-            } else {
-                context.fillStyle = "#00FF00";
-            }
             context.fill();
         }
     }
 }
 
 class StaticLocation extends Location {
+    is_static = true;
     selected = false;
     click_ready = false;
     available_actions = ["walk"];

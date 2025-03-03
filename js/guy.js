@@ -49,6 +49,7 @@ class Guy {
 
             if (v2_distance(this, this.route.end()) == 0) {
                 this.route = null;
+                ui.playerroute.classList.add("hidden");
             }
         }
     }

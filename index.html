@@ -5,6 +5,10 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>transit</title>
     <style>
+        :root {
+            --gap: 1em;
+        }
+        
         html {
             overflow: hidden;
         }
@@ -17,6 +21,7 @@
             width: 100vw;
             height: 100svh;
             margin: 0;
+            touch-action: none;
         }
 
         body.pointing canvas {
@@ -109,12 +114,9 @@
             display: flex;
             flex-wrap: nowrap;
             box-sizing: border-box;
-            gap: 1em;
+            gap: var(--gap);
             width: fit-content;
             align-items: center;
-        }
-        #route-data *, #segment-data * {
-            height: fit-content;
         }
         .info, .info a {
             display: flex;
@@ -158,9 +160,9 @@
             top: 0;
             left: 0;
             height: 100%;
-            padding: 1em;
+            padding: var(--gap);
             box-sizing: border-box;
-            gap: 1em;
+            gap: var(--gap);
         }
 
         #search-container {
@@ -229,8 +231,8 @@
 
         aside {
             position: fixed;
-            bottom: 1em;
-            right: 1em;
+            bottom: var(--gap);
+            right: var(--gap);
             display: flex;
             flex-direction: column;
             gap: .5em;
@@ -249,13 +251,20 @@
                (-o-min-device-pixel-ratio: 2/1), 
                (-webkit-min-device-pixel-ratio: 2), 
                (min-device-pixel-ratio: 2) {
+            :root {
+                --gap: .5em;
+            }
+
             body {
                 font-size: 20px;
             }
+
             .iconbutton img,
-            #search-container {
+            #search-container,
+            a img {
                 width: 2em;
-            }       
+                height: 2em;
+            }
         }
     </style>
 </head>
@@ -305,7 +314,7 @@
             </button>
             <div class="floater info"></div>
         </div>
-        <div style="display: flex; gap: 1em; height: 100%;">
+        <div style="display: flex; gap: var(--gap); height: 100%;">
             <div id="route" class="floater hidden">
                 <div class="segments"></div>
                 <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
