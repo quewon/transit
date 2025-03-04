@@ -1,5 +1,5 @@
 function get_duration_string(duration) {
-    return Math.ceil(duration/60) + "m";
+    return Math.round(duration/10) + "s";
 }
 
 //resource loading

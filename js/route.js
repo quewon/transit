@@ -198,7 +198,7 @@ class RouteSegment {
     route;
     start;
     end;
-    path;
+    path = [];
     center;
     duration;
 
@@ -219,7 +219,6 @@ class RouteSegment {
     }
 
     calculate_path() {
-        this.path = [];
     }
 
     calculate_duration() {
@@ -308,7 +307,6 @@ class WalkSegment extends RouteSegment {
     }
 
     calculate_path() {
-        this.path = [];
         this.path.push(v2_copy(this.start));
         this.path.push(v2_copy(this.end));
     }

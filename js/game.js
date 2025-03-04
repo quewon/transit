@@ -151,17 +151,22 @@ function draw() {
         context.scale(pixel_scale, pixel_scale);
 
         // map
-        // context.fillStyle = "rgba(0, 0, 0, .1)";
-        // for (let y=-window.innerHeight/2; y<=window.innerHeight/2; y+=MAP_INTERVAL * map_zoom) {
-        //     for (let x=-window.innerWidth/2; x<=window.innerWidth/2; x+=MAP_INTERVAL * map_zoom) {
-        //         draw_circle(
-        //             x - window.innerWidth/2, 
-        //             y - window.innerHeight/2, 
-        //             pixel_scale/2
-        //         );
-        //         context.fill();
-        //     }
-        // }
+        let interval = MAP_INTERVAL;
+        let mod = {
+            x: map_offset.x % interval,
+            y: map_offset.y % interval
+        }
+        context.fillStyle = "rgba(0, 0, 0, .1)";
+        for (let y=-window.innerHeight / map_zoom; y<=window.innerHeight / map_zoom; y+=interval) {
+            for (let x=-window.innerWidth / map_zoom; x<=window.innerWidth / map_zoom; x+=interval) {
+                draw_circle(
+                    (Math.round(x / interval) * interval + mod.x) * map_zoom,
+                    (Math.round(y / interval) * interval + mod.y) * map_zoom,
+                    2
+                );
+                context.fill();
+            }
+        }
 
         for (let location of locations) {
             location.draw();
@@ -179,9 +184,9 @@ function draw() {
 
 function resize() {
     if (window.devicePixelRatio >= 2) {
-        pixel_scale = 3.4;
+        pixel_scale = window.devicePixelRatio * 1.7;
     } else {
-        pixel_scale = 1.17;
+        pixel_scale = window.devicePixelRatio;
     }
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
@@ -230,6 +235,7 @@ function mousemove(e) {
         let delta = pinch - mouse.pinch;
         map_zoom += delta/2000;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
+        mouse.pinch = pinch;
     }
     
     mouse.x = p.x;
