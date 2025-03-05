@@ -11,6 +11,7 @@ class Player {
         this.x = location.x;
         this.y = location.y;
         this.location = location;
+        document.title = location.name;
     }
 
     add_money(amount) {
@@ -37,6 +38,7 @@ class Player {
         this.point_index = 0;
 
         ui.favicon.href = first_segment.icon;
+        document.title = "in transit";
     }
     
     draw() {
@@ -80,6 +82,7 @@ class Player {
                         if (selected_location) selected_location.show_window();
                         this.route = null;
                         ui.favicon.href = "res/icons/location-pin.svg";
+                        document.title = this.location.name;
                     } else {
                         ui.favicon.href = this.route.segments[this.segment_index].icon;
                     }

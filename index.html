@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link rel="icon" href="res/icons/location-pin.svg">
-    <title>transit</title>
+    <title>in transit</title>
     <style>
         :root {
             --gap: 1em;
@@ -214,37 +214,9 @@
             line-height: 0;
         }
 
-        #search-container {
-            width: var(--icon-size);
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            transition: width 400ms, box-shadow 400ms;
-        }
-        #search-container:has(#search:focus) {
-            width: 100%;
-        }
         #segment-data, 
-        #route:has(.selected),
-        #search-container:has(#search:focus) {
+        #route:has(.selected) {
             box-shadow: 0 0 2px rgba(0, 0, 255, 1);
-        }
-        #search {
-            pointer-events: none;
-            font-family: inherit;
-            font-size: inherit;
-            position: relative;
-            width: 0;
-            padding: 0;
-            height: fit-content;
-            border: none;
-            transition: margin 100ms;
-        }
-        #search:focus {
-            outline: none;
-            pointer-events: auto;
-            width: 100%;
-            margin: 0 5px;
         }
 
         .iconbutton {
@@ -392,12 +364,6 @@
                 <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
                     <img src="res/icons/plane.svg" title="go!">
                 </button>
-            </div>
-            <div id="search-container" class="floater">
-                <button class="iconbutton" onclick="search.focus()">
-                    <img src="res/icons/search.svg">
-                </button>
-                <input id="search" type="text">
             </div>
         </div>
     </header>
