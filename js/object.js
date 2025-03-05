@@ -178,7 +178,8 @@ class MissionPrompt extends Object {
                     icon: "res/icons/star.svg"
                 })
                 location.add_object(mission);
-                location.select();
+                if (selected_location) selected_location.deselect();
+                jumpto(location);
                 break;
             }
         }
@@ -186,6 +187,8 @@ class MissionPrompt extends Object {
 
     onadd(location) {
         alert(`a <b>letter</b> has arrived at ${location.name}.`, "res/icons/mail.svg");
+        if (selected_location) selected_location.deselect();
+        jumpto(location);
     }
 }
 

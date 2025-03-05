@@ -55,6 +55,7 @@
             width: var(--icon-size);
             height: var(--icon-size);
             translate: -50% -100%;
+            pointer-events: none;
         }
         .location {
             position: absolute;
@@ -113,6 +114,7 @@
         }
 
         figure {
+            line-height: 0;
             margin: 0;
             margin-bottom: 4px;
         }
@@ -439,6 +441,7 @@
         </p>
         <center>
             <p name="job"></p>
+            <p>will you accept this job?</p>
             <button class="iconbutton" name="accept">
                 <img src="res/icons/job.svg" title="accept">
             </button>
@@ -450,7 +453,7 @@
     </dialog>
 
     <dialog id="view-job">
-        <button class="close iconbutton" onclick="this.parentElement.close()">
+        <button class="close iconbutton" onclick="this.parentElement.close();game_paused=false">
             <img src="res/icons/close.svg" title="close window">
         </button>
         <center><img name="contact-icon" src="res/icons/person.svg"></center>
