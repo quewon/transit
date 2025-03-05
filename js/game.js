@@ -280,7 +280,7 @@ function mousemove(e) {
             { x: e.touches[1].clientX, y: e.touches[1].clientY }
         );
         let delta = pinch - mouse.pinch;
-        map_zoom += delta/1000;
+        map_zoom += (delta/500) * map_zoom;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
         mouse.pinch = pinch;
     }
