@@ -178,7 +178,7 @@ class StaticLocation extends Location {
 
         segment = new segment(route_location || player.get_location(), this);
 
-        if (!current_route) {
+        if (!current_route || current_route.is_locked) {
             set_current_route(new Route([segment]));
         } else {
             current_route.add_segment(segment);

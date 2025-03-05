@@ -28,8 +28,12 @@ class Player {
         first_segment.calculate();
         this.location = null;
 
+        if (this.route) {
+            this.route.remove();
+        }
+
         this.route = route;
-        this.route.is_locked = true;
+        this.route.lock();
         this.route.guy = this;
         set_current_route();
         this.follow();

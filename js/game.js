@@ -311,6 +311,7 @@ function resize() {
     } else {
         pixel_scale = window.devicePixelRatio;
     }
+    document.documentElement.style.setProperty("--pixel", pixel_scale + "px");
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
     canvas.style.width = window.innerWidth + "px";

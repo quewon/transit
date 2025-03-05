@@ -3,6 +3,14 @@ function set_current_route(route) {
         current_route.focused_segment.unfocus();
     }
     if (route) {
+        if (current_route && current_route != route) {
+            if (current_route.is_locked) {
+                current_route.pin.src = "res/icons/location-pin.svg";
+            } else {
+                current_route.remove();
+            }
+        }
+
         if (route.is_tentative || route.is_locked) {
             ui.gobutton.classList.add("hidden");
         } else {
@@ -17,14 +25,12 @@ function set_current_route(route) {
         ui.routesegments = route.segments_element;
         ui.routeinfo.replaceWith(route.info_element);
         ui.routeinfo = route.info_element;
-        if (route.guy) {
-            route.guy.follow();
-        }
+        if (route.guy) route.guy.follow();
         if (route == player.route) {
             ui.playerroute.classList.add("hidden");
         }
     } else {
-        if (current_route.is_locked) {
+        if (current_route && current_route.is_locked) {
             current_route.pin.src = "res/icons/location-pin.svg";
         }
         ui.route.classList.add("hidden");
@@ -84,6 +90,10 @@ class Route {
                 this.add_segment(segment);
             }
         }
+    }
+
+    lock() {
+        this.is_locked = true;
     }
 
     update_duration() {
