@@ -234,6 +234,8 @@ class RouteSegment {
     }
 
     init_element(type) {
+        this.icon = "res/icons/"+type+".svg";
+
         let info = document.createElement("div");
         info.className = "info";
         info.appendChild(this.start.anchor());
@@ -250,7 +252,7 @@ class RouteSegment {
         let button = document.createElement("button");
         button.className = "iconbutton";
         img = document.createElement("img");
-        img.src = "res/icons/"+type+".svg";
+        img.src = this.icon;
         button.appendChild(img);
         
         this.element.appendChild(button);

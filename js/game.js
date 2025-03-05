@@ -11,6 +11,7 @@ const CONTACTS = {
 
 const context = canvas.getContext("2d");
 const ui = {
+    "favicon": document.querySelector("link[rel~='icon']"),
     "alert": document.getElementById("alert"),
     "map": document.getElementById("map"),
     "locationmenus": document.getElementById("location-menus"),
@@ -59,7 +60,7 @@ function init() {
     // event listeners
 
     window.addEventListener("wheel", e => {
-        map_zoom += e.deltaY/1000;
+        map_zoom += e.deltaY/1000 * map_zoom;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
     })
 
@@ -123,26 +124,41 @@ function init() {
     player = new Player(home);
 
     home.add_object(new Object(
-        "a package",
+        "package",
         "res/icons/package.svg",
         () => {
             player.add_money(100);
+            setTimeout(() => {
+                home.add_object(new Object(
+                    "letter",
+                    "res/icons/mail.svg",
+                    () => {
+                        alert("from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.", "res/icons/mail-open.svg")
+                    }
+                ))
+                alert("a <b>letter</b> has arrived at home.", "res/icons/mail.svg");
+            }, 1000 * 15);
         }
     ));
 
-    alert("a package has arrived at home.", "res/icons/package.svg");
+    alert("a <b>package</b> has arrived at home.", "res/icons/package.svg");
 
-    home.add_object(new Contact(
+    let not_home = locations[Math.random() * locations.length | 0];
+    while (not_home == home) {
+        not_home = locations[Math.random() * locations.length | 0];
+    }
+
+    not_home.add_object(new Contact(
         "broke friend",
         new Job({
             title: "I REALLY NEED A LOAN, MAN",
-            description: "give 50 money",
+            description: "deliver 50 money to <b>broke friend</b>.",
             fulfillable: () => {
                 return player.money >= 50;
             },
             fulfill: () => {
                 player.money -= 50;
-                alert("50 money lost.", "res/icons/money.svg");
+                alert("50 money lost. your friend's gratitude earned.", "res/icons/money.svg");
             }
         })
     ))
@@ -280,7 +296,7 @@ function mousemove(e) {
             { x: e.touches[1].clientX, y: e.touches[1].clientY }
         );
         let delta = pinch - mouse.pinch;
-        map_zoom += (delta/500) * map_zoom;
+        map_zoom += (delta/700) * window.devicePixelRatio * map_zoom;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
         mouse.pinch = pinch;
     }

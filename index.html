@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link rel="icon" href="res/icons/bus.svg">
+    <link rel="icon" href="res/icons/location-pin.svg">
     <title>transit</title>
     <style>
         :root {
@@ -132,12 +132,6 @@
         }
         button:hover {
             background: yellow;
-        }
-        button:disabled {
-            background: white;
-            border-color: gray;
-            color: gray;
-            cursor: default;
         }
 
         #route {
@@ -270,6 +264,10 @@
         .iconbutton.selected {
             scale: 1.1;
         }
+        .iconbutton:disabled {
+            pointer-events: none;
+            opacity: .3;
+        }
         .segments:has(.iconbutton.selected) .iconbutton {
             opacity: .3;
         }
@@ -296,6 +294,7 @@
         }
 
         dialog {
+            font-family: 'Courier', monospace;
             border: 1px solid black;
             background: white;
             padding: 1em;
@@ -312,6 +311,10 @@
         dialog img {
             width: var(--icon-size);
             height: var(--icon-size);
+        }
+
+        #alert {
+            text-transform: uppercase;
         }
 
         .hidden {
@@ -409,18 +412,19 @@
     </dialog>
 
     <dialog id="job-offer">
-        <button class="close iconbutton" onclick="this.parentElement.close()">
-            <img src="res/icons/close.svg" title="close window">
-        </button>
         <center><img src="res/icons/person.svg"></center>
         <p>
             <b class="contact-name">friend</b> has a job for you.
         </p>
         <center>
             <p class="job"></p>
-            <button name="accept">ACCEPT</button>
-            <button name="reject">REJECT</button>
-            <button name="fulfill" class="hidden">FULFILL</button>
+            <button class="iconbutton" name="accept">
+                <img src="res/icons/accept.svg" title="accept">
+            </button>
+            <img src="res/icons/dots-horizontal.svg">
+            <button class="iconbutton" name="reject">
+                <img src="res/icons/reject.svg" title="reject">
+            </button>
         </center>
     </dialog>
 
@@ -434,7 +438,9 @@
         </p>
         <center>
             <p class="job"></p>
-            <button name="fulfill">FULFILL</button>
+            <button class="iconbutton" name="fulfill">
+                <img src="res/icons/fulfill.svg" title="fulfill">
+            </button>
         </center>
     </dialog>
 

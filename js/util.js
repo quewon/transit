@@ -2,7 +2,7 @@
 
 function alert(text, icon) {
     ui.alert.querySelector("center img").src = icon;
-    ui.alert.querySelector("main").textContent = text;
+    ui.alert.querySelector("main").innerHTML = text;
     ui.alert.showModal();
 }
 

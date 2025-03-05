@@ -15,7 +15,7 @@ class Player {
 
     add_money(amount) {
         this.money += amount;
-        alert(amount+" money added to account.", "res/icons/money.svg");
+        alert(`${amount} money added to account.<br>new balance: ${this.money}`, "res/icons/money.svg");
     }
 
     traverse_route(route) {
@@ -35,6 +35,8 @@ class Player {
         ui.playerroute.classList.remove("hidden");
         this.segment_index = 0;
         this.point_index = 0;
+
+        ui.favicon.href = first_segment.icon;
     }
     
     draw() {
@@ -77,6 +79,9 @@ class Player {
                         ui.playerroute.classList.add("hidden");
                         if (selected_location) selected_location.show_window();
                         this.route = null;
+                        ui.favicon.href = "res/icons/location-pin.svg";
+                    } else {
+                        ui.favicon.href = this.route.segments[this.segment_index].icon;
                     }
                 }
             }   
