@@ -26,9 +26,9 @@ class Location {
             this.icons_element = icons;
             this.icons_element.onclick = this.select.bind(this);
         }
-
-        object.location = this;
         this.icons_element.appendChild(object.icon_element);
+        object.location = this;
+        object.onadd(this);
     }
 
     remove_object(object) {
@@ -142,8 +142,17 @@ class StaticLocation extends Location {
     }
 
     add_object(object) {
-        super.add_object(object);
+        if (!this.icons_element) {
+            let icons = document.createElement("div");
+            icons.className = "location-icons iconbutton";
+            ui.map.appendChild(icons);
+            this.icons_element = icons;
+            this.icons_element.onclick = this.select.bind(this);
+        }
+        this.icons_element.appendChild(object.icon_element);
+        object.location = this;
         this.objects_menu.appendChild(object.button);
+        object.onadd(this);
     }
 
     remove_object(object) {

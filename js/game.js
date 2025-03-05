@@ -1,13 +1,36 @@
+const MISSIONS = [
+    {
+        location: "airport",
+        prompt: "from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.",
+        title: "BUSINESS CALLS",
+        description: "pay 150 money for a plane ticket at the airport.",
+        fulfillable: () => {
+            return player.money >= 150
+        },
+        fulfill: () => {
+            player.money -= 150;
+            alert("150 money lost. mission success.", "res/icons/star.svg");
+        }
+    }
+]
+
 const CONTACTS = {
-    "childhood friend": {
-        icon: ":)",
-        trust_condition: ["CALL"]
-    },
-    "friend of a friend": {
-        icon: ":-)",
-        trust_condition: ["TRUST: childhood friend"]
-    },
-};
+    "broke friend": {
+        name: "broke friend",
+        job: {
+            title: "I REALLY NEED A LOAN, MAN",
+            description: "deliver 50 money to <b>broke friend</b>.",
+            destination: "CONTACT: broke friend",
+            fulfillable: () => {
+                return player.money >= 50;
+            },
+            fulfill: () => {
+                player.money -= 50;
+                alert("50 money lost. your friend's gratitude earned.", "res/icons/money.svg");
+            }
+        }
+    }
+}
 
 const context = canvas.getContext("2d");
 const ui = {
@@ -38,12 +61,14 @@ var previous_tick;
 var player;
 var following;
 
-var locations = [];
+var locations;
 var selected_location;
 
 var routes = [];
 var route_location;
 var current_route;
+
+var contacts;
 
 const MAP_RADIUS = 5;
 const MAP_INTERVAL = 50;
@@ -101,7 +126,22 @@ function init() {
 
     resize();
 
-    // generate map
+    //
+
+    init_level();
+
+    //
+
+    previous_tick = new Date();
+    tick();
+}
+
+function init_level() {
+    const mission = MISSIONS[MISSIONS.length * Math.random() | 0];
+
+    // locations
+
+    locations = [];
 
     const home = new StaticLocation(0, 0, "home");
     locations.push(home);
@@ -119,54 +159,48 @@ function init() {
         }
     }
 
-    // generate contacts
+    // create mission location
 
-    player = new Player(home);
+    var mission_location = locations[locations.length * Math.random() | 0];
+    while (mission_location == home) {
+        mission_location = locations[locations.length * Math.random() | 0];
+    }
+    mission_location.name = mission.location;
+
+    // objects
 
     home.add_object(new Object(
         "package",
         "res/icons/package.svg",
-        () => {
-            player.add_money(100);
-            setTimeout(() => {
-                home.add_object(new Object(
-                    "letter",
-                    "res/icons/mail.svg",
-                    () => {
-                        alert("from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.", "res/icons/mail-open.svg")
-                    }
-                ))
-                alert("a <b>letter</b> has arrived at home.", "res/icons/mail.svg");
-            }, 1000 * 15);
+        {
+            onclick: () => {
+                player.add_money(100);
+                setTimeout(() => {
+                    home.add_object(new MissionPrompt(mission));
+                }, 1000 * 1);
+            }
         }
     ));
 
     alert("a <b>package</b> has arrived at home.", "res/icons/package.svg");
 
-    let not_home = locations[Math.random() * locations.length | 0];
-    while (not_home == home) {
-        not_home = locations[Math.random() * locations.length | 0];
+    // contacts
+
+    contacts = {};
+    var pool = ["broke friend"];
+
+    for (let name of pool) {
+        contacts[name] = new Contact(CONTACTS[name]);
+        let not_home = locations[Math.random() * locations.length | 0];
+        while (not_home == home) {
+            not_home = locations[Math.random() * locations.length | 0];
+        }
+        not_home.add_object(contacts[name]);
     }
 
-    not_home.add_object(new Contact(
-        "broke friend",
-        new Job({
-            title: "I REALLY NEED A LOAN, MAN",
-            description: "deliver 50 money to <b>broke friend</b>.",
-            fulfillable: () => {
-                return player.money >= 50;
-            },
-            fulfill: () => {
-                player.money -= 50;
-                alert("50 money lost. your friend's gratitude earned.", "res/icons/money.svg");
-            }
-        })
-    ))
+    // player
 
-    //
-
-    previous_tick = new Date();
-    tick();
+    player = new Player(home);
 }
 
 function tick() {
