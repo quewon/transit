@@ -1,25 +1,21 @@
 // game
 
+function set_game_timeout(func, duration) {
+    game_timeouts.push({
+        time: duration,
+        func: func
+    })
+}
+
 function alert(text, icon) {
     ui.alert.querySelector("center img").src = icon;
     ui.alert.querySelector("main").innerHTML = text;
     ui.alert.showModal();
+    game_paused = true;
 }
 
 function get_duration_string(duration) {
     return Math.round(duration/10) + "s";
-}
-
-//resource loading
-
-function load_images(images) {
-    for (let name in images) {
-        let path = images[name];
-        let img = new Image();
-        img.src = path;
-        images[name] = img;
-    }
-    return images;
 }
 
 //dom

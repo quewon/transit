@@ -1,6 +1,7 @@
 const MISSIONS = [
     {
         location: "airport",
+        location_image: "res/locations/airport.jpg",
         prompt: "from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.",
         title: "BUSINESS CALLS",
         description: "pay 150 money for a plane ticket at the airport.",
@@ -17,18 +18,30 @@ const MISSIONS = [
 const CONTACTS = {
     "broke friend": {
         name: "broke friend",
+        stats: { talk: 2 },
+        trust_conditions: "give them a loan",
         job: {
             title: "I REALLY NEED A LOAN, MAN",
-            description: "deliver 50 money to <b>broke friend</b>.",
+            description: "deliver 50 money to broke friend.",
             destination: "CONTACT: broke friend",
             fulfillable: () => {
                 return player.money >= 50;
             },
             fulfill: () => {
                 player.money -= 50;
+                contacts["broke friend"].trusted = true;
+                contacts["broke friend"].name = "friend";
                 alert("50 money lost. your friend's gratitude earned.", "res/icons/money.svg");
             }
         }
+    },
+    "friend of a friend": {
+        name: "friend of a friend",
+        stats: { talk: 1 },
+        spawnable: () => {
+            return !!contacts["broke friend"];
+        },
+        trust_conditions: "earn <b>broke friend</b>'s trust"
     }
 }
 
@@ -48,15 +61,14 @@ const ui = {
     "gobutton": document.getElementById("go-button"),
     "playerroute": document.getElementById("current-player-route"),
     "joboffer": document.getElementById("job-offer"),
-    "viewjob": document.getElementById("view-job")
+    "viewjob": document.getElementById("view-job"),
+    "viewcontact": document.getElementById("view-contact")
 }
-const icons = load_images({
-    "location-pin": "res/icons/route-location-pin.svg",
-    "location-pin-black": "res/icons/location-pin.svg"
-})
 
 var mouse;
 var previous_tick;
+var game_paused = false;
+var game_timeouts;
 
 var player;
 var following;
@@ -85,7 +97,7 @@ function init() {
     // event listeners
 
     window.addEventListener("wheel", e => {
-        map_zoom += e.deltaY/1000 * map_zoom;
+        map_zoom -= e.deltaY/1000 * map_zoom;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
     })
 
@@ -166,6 +178,7 @@ function init_level() {
         mission_location = locations[locations.length * Math.random() | 0];
     }
     mission_location.name = mission.location;
+    mission_location.menu.querySelector("img").src = mission.location_image;
 
     // objects
 
@@ -175,7 +188,7 @@ function init_level() {
         {
             onclick: () => {
                 player.add_money(100);
-                setTimeout(() => {
+                set_game_timeout(() => {
                     home.add_object(new MissionPrompt(mission));
                 }, 1000 * 1);
             }
@@ -201,6 +214,9 @@ function init_level() {
     // player
 
     player = new Player(home);
+
+    game_paused = false;
+    game_timeouts = [];
 }
 
 function tick() {
@@ -214,6 +230,16 @@ function update() {
     const delta = now - previous_tick;
 
     //
+
+    if (!game_paused) {
+        for (let i=game_timeouts.length-1; i>=0; i--) {
+            game_timeouts[i].time -= delta;
+            if (game_timeouts[i].time <= 0) {
+                game_timeouts[i].func();
+                game_timeouts.splice(i, 1);
+            }
+        }
+    }
 
     map_offset = v2_lerp(map_offset, desired_map_offset, MAP_SMOOTH);
 

@@ -1,5 +1,4 @@
 class Object {
-    type = "item";
     name;
     icon;
     location;
@@ -15,6 +14,7 @@ class Object {
         this.name = name;
         this.icon = icon;
         if (events.onclick) this.onclick = events.onclick;
+        if (events.onclick_elsewhere) this.onclick = events.onclick_elsewhere;
         if (events.onadd) this.onadd = events.onadd;
 
         let button = document.createElement("button");
@@ -27,7 +27,7 @@ class Object {
                 this.onclick();
                 if (this.remove_onclick) this.location.remove_object(this);
             } else {
-                alert(`you have to be here to interact with this ${this.type}.`, this.icon);
+                this.onclick_elsewhere();
             }
         }.bind(this);
         this.button = button;
@@ -36,14 +36,18 @@ class Object {
     }
 
     onclick() { }
+    onclick_elsewhere() {
+        alert(`you have to be here to interact with <b>${this.name}</b>.`, this.icon);
+    }
     onadd(location) { }
 }
 
 class Contact extends Object {
+    trusted = false;
+
     constructor(contact) {
         super(contact.name, contact.icon || "res/icons/person.svg");
 
-        this.type = "contact";
         this.remove_onclick = false;
         
         if (contact.job) {
@@ -53,7 +57,14 @@ class Contact extends Object {
     }
 
     onclick() {
-        alert(`<b>${this.name}</b> says hello.`, this.icon);
+        ui.viewcontact.querySelector("[name='contact-name'").textContent = this.name;
+        ui.viewcontact.querySelector("[name='trust-state'").textContent = this.trusted ? "in trust" : "not in trust";
+        ui.viewcontact.showModal();
+        game_paused = true;
+    }
+
+    onclick_elsewhere() {
+        this.onclick();
     }
 
     onadd(location) {
@@ -117,6 +128,8 @@ class Job extends Object {
             ui.viewjob.querySelector("[name='job']").replaceWith(this.element);
             ui.viewjob.showModal();
         }
+
+        game_paused = true;
     }
 
     accept() {
@@ -142,6 +155,7 @@ class Job extends Object {
     close() {
         ui.joboffer.close();
         ui.viewjob.close();
+        game_paused = false;
     }
 }
 

@@ -115,7 +115,6 @@ class StaticLocation extends Location {
         // create menu
 
         let menu = copy_template("location-menu");
-        let img = menu.querySelector("img");
 
         this.buttons = {
             "walk": menu.querySelector(".walk"),
@@ -263,8 +262,6 @@ class StaticLocation extends Location {
     }
 
     show_window() {
-        this.menu.classList.remove("hidden");
-
         // update window
         if (player.location == this && (!current_route || !current_route.is_tentative)) {
             for (let action in this.buttons) {
@@ -285,10 +282,16 @@ class StaticLocation extends Location {
             this.route_button.classList.add("hidden");
         } else {
             this.clear_route_button.classList.add("hidden");
-            this.route_button.classList.remove("hidden");
+            if (player.location == this) {
+                this.route_button.classList.add("hidden");
+            } else {
+                this.route_button.classList.remove("hidden");
+            }
         }
 
         if (this.icons_element) this.icons_element.classList.add("hidden");
+
+        this.menu.classList.remove("hidden");
     }
 
     hide_window() {

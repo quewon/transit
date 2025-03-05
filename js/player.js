@@ -50,13 +50,13 @@ class Player {
             draw_circle(p.x, p.y, 4);
             context.fill();
         }
-
-        if (this.route) this.route.draw_pins();
     }
 
     update(delta) {
-        if (following == this) jumpto(this);
-        this.update_route(delta);
+        if (!game_paused) {
+            if (following == this) jumpto(this);
+            this.update_route(delta);
+        }
     }
 
     update_route(delta) {
@@ -80,6 +80,7 @@ class Player {
                         if (current_route == this.route) set_current_route();
                         ui.playerroute.classList.add("hidden");
                         if (selected_location) selected_location.show_window();
+                        this.route.remove();
                         this.route = null;
                         ui.favicon.href = "res/icons/location-pin.svg";
                         document.title = this.location.name;

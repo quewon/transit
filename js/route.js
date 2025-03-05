@@ -2,12 +2,14 @@ function set_current_route(route) {
     if (current_route && current_route.focused_segment) {
         current_route.focused_segment.unfocus();
     }
-    current_route = route;
     if (route) {
         if (route.is_tentative || route.is_locked) {
             ui.gobutton.classList.add("hidden");
         } else {
             ui.gobutton.classList.remove("hidden");
+        }
+        if (route.is_locked) {
+            route.pin.src = "res/icons/route-location-pin.svg";
         }
         ui.route.classList.remove("hidden");
         ui.routedata.classList.remove("hidden");
@@ -22,15 +24,21 @@ function set_current_route(route) {
             ui.playerroute.classList.add("hidden");
         }
     } else {
+        if (current_route.is_locked) {
+            current_route.pin.src = "res/icons/location-pin.svg";
+        }
         ui.route.classList.add("hidden");
         ui.routedata.classList.add("hidden");
         ui.segmentdata.classList.add("hidden");
         route_location = null;
+        if (selected_location) selected_location.show_window();
     }
 
     if (player.route && route != player.route) {
         ui.playerroute.classList.remove("hidden");
     }
+
+    current_route = route;
 }
 
 class Route {
@@ -40,6 +48,7 @@ class Route {
     focused_segment;
     duration;
 
+    pin;
     segments_element;
     info_element;
     info_anchors;
@@ -65,6 +74,11 @@ class Route {
         info.appendChild(this.duration_element);
         this.info_element = info;
 
+        this.pin = document.createElement("img");
+        this.pin.src = "res/icons/route-location-pin.svg";
+        this.pin.className = "pin hidden";
+        ui.map.appendChild(this.pin);
+
         if (segments) {
             for (let segment of segments) {
                 this.add_segment(segment);
@@ -86,7 +100,7 @@ class Route {
             let a = segment.start.anchor();
             this.info_anchors[0].replaceWith(a);
             this.info_anchors[0] = a;
-            a = segment.end.anchor()
+            a = segment.end.anchor();
             this.info_anchors[1].replaceWith(a);
             this.info_anchors[1] = a;
         } else {
@@ -101,6 +115,8 @@ class Route {
         segment.route = this;
 
         this.update_duration();
+
+        this.pin.classList.remove("hidden");
     }
 
     remove_last_segment() {
@@ -116,7 +132,10 @@ class Route {
         if (last_segment) {
             route_location = last_segment.start;
             this.segments_element.lastElementChild.remove();
-            if (this.segments.length == 0) this.segments_element.classList.add("empty");
+            if (this.segments.length == 0) {
+                this.segments_element.classList.add("empty");
+                this.pin.classList.add("hidden");
+            }
         }
 
         this.update_duration();
@@ -135,17 +154,16 @@ class Route {
 
         if (this.segments.length > 0) {
             this.start().draw_on_map();
-            this.draw_pins();
+            if (this.pin) {
+                let end_location = canvas_to_screen(position_to_canvas(this.segments[this.segments.length - 1].end));
+                this.pin.style.left = end_location.x + "px";
+                this.pin.style.top = end_location.y + "px";
+            }
         }
     }
 
-    draw_pins() {
-        let end_location = position_to_canvas(this.segments[this.segments.length - 1].end);
-        if (this.is_locked && current_route != this) {
-            draw_pin(icons["location-pin-black"], end_location.x, end_location.y);
-        } else {
-            draw_pin(icons["location-pin"], end_location.x, end_location.y);
-        }
+    remove() {
+        this.pin.remove();
     }
 
     start() {

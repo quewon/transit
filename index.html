@@ -6,6 +6,11 @@
     <link rel="icon" href="res/icons/location-pin.svg">
     <title>in transit</title>
     <style>
+        @font-face {
+            font-family: Geist;
+            src: url(res/font/GeistMono.ttf);
+        }
+
         :root {
             --gap: 1em;
             --icon-size: 24px;
@@ -16,7 +21,7 @@
         }
 
         body {
-            font-family: sans-serif;
+            font-family: 'Geist', monospace;
             font-size: 14px;
             overflow: hidden;
             position: relative;
@@ -44,6 +49,12 @@
             display: none;
         }
 
+        .pin {
+            position: absolute;
+            width: var(--icon-size);
+            height: var(--icon-size);
+            translate: -50% -100%;
+        }
         .location {
             position: absolute;
             background: white;
@@ -56,7 +67,8 @@
             pointer-events: auto;
         }
         figure > img {
-            width: 10rem;
+            max-width: 10em;
+            width: 70vw;
             aspect-ratio: 1;
         }
         .objects {
@@ -132,6 +144,27 @@
         }
         button:hover {
             background: yellow;
+        }
+
+        #timer-container {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            width: fit-content;
+            height: var(--icon-size);
+        }
+        #timer {
+            padding: 0 5px;
+            background: white;
+        }
+        .data-container {
+            display: flex; 
+            gap: var(--gap); 
+            justify-content: space-around;
+        }
+        .data-container:has(#route-data:not(.hidden)),
+        .data-container:has(#segment-data:not(.hidden)) {
+            justify-content: space-between;
         }
 
         #route {
@@ -266,7 +299,6 @@
         }
 
         dialog {
-            font-family: 'Courier', monospace;
             border: 1px solid black;
             background: white;
             padding: 1em;
@@ -335,28 +367,33 @@
     </aside>
 
     <header>
-        <div id="route-data" class="floater hidden">
-            <button class="iconbutton" onclick="set_current_route()">
-                <img src="res/icons/close.svg" title="clear route">
-            </button>
-            <div class="info">
-                <a>
-                    <img src="res/icons/circle.svg">
-                    <span>location</span>
-                </a>
-                <img src="res/icons/dots-horizontal.svg">
-                <a>
-                    <img src="res/icons/location-pin.svg">
-                    <span>location</span>
-                </a>
-                <div class="duration-estimate"></div>
+        <div class="data-container">
+            <div id="route-data" class="floater hidden">
+                <button class="iconbutton" onclick="set_current_route()">
+                    <img src="res/icons/close.svg" title="clear route">
+                </button>
+                <div class="info">
+                    <a>
+                        <img src="res/icons/circle.svg">
+                        <span>location</span>
+                    </a>
+                    <img src="res/icons/dots-horizontal.svg">
+                    <a>
+                        <img src="res/icons/location-pin.svg">
+                        <span>location</span>
+                    </a>
+                    <div class="duration-estimate"></div>
+                </div>
             </div>
-        </div>
-        <div id="segment-data" class="floater hidden">
-            <button class="iconbutton" onclick="current_route.focused_segment.unfocus()">
-                <img src="res/icons/back-arrow.svg" title="back to route">
-            </button>
-            <div class="floater info"></div>
+            <div id="segment-data" class="floater hidden">
+                <button class="iconbutton" onclick="current_route.focused_segment.unfocus()">
+                    <img src="res/icons/back-arrow.svg" title="back to route">
+                </button>
+                <div class="floater info"></div>
+            </div>
+            <div id="timer-container">
+                <div id="timer">00:00</div>
+            </div>
         </div>
         <div class="flex-container">
             <div id="route" class="floater hidden">
@@ -369,12 +406,29 @@
     </header>
 
     <dialog id="alert">
-        <button class="close iconbutton" onclick="this.parentElement.close()">
+        <button class="close iconbutton" onclick="this.parentElement.close();game_paused=false">
             <img src="res/icons/close.svg" title="close window">
         </button>
         <center><img src="res/icons/person.svg"></center>
         <br>
         <main></main>
+    </dialog>
+
+    <dialog id="view-contact">
+        <button class="close iconbutton" onclick="this.parentElement.close();game_paused=false">
+            <img src="res/icons/close.svg" title="close window">
+        </button>
+        <center>
+            <img src="res/icons/person.svg"><br>
+            <b name="contact-name">friend</b><br>
+            <span name="trust-state">not in trust</span>
+        </center>
+        <p>
+            to earn their trust:
+            <ul>
+                <li>trust condition 1</li>
+            </ul>
+        </p>
     </dialog>
 
     <dialog id="job-offer">
