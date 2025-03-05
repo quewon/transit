@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link rel="icon" href="res/icons/bus.svg">
     <title>transit</title>
     <style>
         :root {
             --gap: 1em;
+            --icon-size: 24px;
         }
         
         html {
@@ -48,10 +50,42 @@
             border: 1px solid black;
             padding: .5em;
             translate: -50% calc(-100% - 1em);
+            pointer-events: none;
         }
-        .location img {
+        .location .iconbutton {
+            pointer-events: auto;
+        }
+        figure > img {
             width: 10rem;
             aspect-ratio: 1;
+        }
+        .objects {
+            position: absolute;
+            padding: .5em;
+        }
+
+        .location-icons {
+            position: absolute;
+            translate: -50% .5em;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .location-icons * {
+            pointer-events: none;
+        }
+        .location-icons::after {
+            content: "";
+            background-image: url(res/icons/plus.svg);
+            display: inline-block;
+            width: var(--icon-size);
+            height: var(--icon-size);
+            background-size: var(--icon-size);
+        }
+        .location-icons .iconbutton:not(:first-child) {
+            display: none;
+        }
+        .location-icons:has(.iconbutton:only-child)::after {
+            display: none;
         }
 
         .actions-container {
@@ -98,6 +132,12 @@
         }
         button:hover {
             background: yellow;
+        }
+        button:disabled {
+            background: white;
+            border-color: gray;
+            color: gray;
+            cursor: default;
         }
 
         #route {
@@ -170,9 +210,18 @@
             gap: var(--gap);
         }
 
-        #search-container {
+        .flex-container {
+            display: flex; 
+            gap: var(--gap); 
+            height: 100%;
+        }
+        .flex-container > div {
             height: fit-content;
-            width: 24px;
+            line-height: 0;
+        }
+
+        #search-container {
+            width: var(--icon-size);
             display: flex;
             align-items: center;
             overflow: hidden;
@@ -208,16 +257,17 @@
             border: none;
             padding: 0;
             line-height: 0;
+            transition: scale 100ms;
         }
         .iconbutton, .iconbutton:hover {
             background: transparent;
         }
         .iconbutton img {
             width: fit-content;
-            transition: scale 100ms;
+            height: var(--icon-size);
         }
-        .iconbutton:hover img,
-        .iconbutton.selected img {
+        .iconbutton:hover,
+        .iconbutton.selected {
             scale: 1.1;
         }
         .segments:has(.iconbutton.selected) .iconbutton {
@@ -245,6 +295,24 @@
             line-height: 0;
         }
 
+        dialog {
+            border: 1px solid black;
+            background: white;
+            padding: 1em;
+            box-sizing: border-box;
+            max-width: calc(100% - 2em);
+        }
+
+        dialog .close {
+            position: absolute;
+            top: 1em;
+            right: 1em;
+        }
+
+        dialog img {
+            height: var(--icon-size);
+        }
+
         .hidden {
             display: none !important;
         }
@@ -255,17 +323,11 @@
                (min-device-pixel-ratio: 2) {
             :root {
                 --gap: .5em;
+                --icon-size: 2em;
             }
 
             body {
                 font-size: 20px;
-            }
-
-            .iconbutton img,
-            #search-container,
-            a img {
-                width: 2em;
-                height: 2em;
             }
         }
     </style>
@@ -275,6 +337,10 @@
     <canvas id="canvas"></canvas>
 
     <div id="map">
+
+    </div>
+
+    <div id="location-menus">
 
     </div>
 
@@ -316,7 +382,7 @@
             </button>
             <div class="floater info"></div>
         </div>
-        <div style="display: flex; gap: var(--gap); height: 100%;">
+        <div class="flex-container">
             <div id="route" class="floater hidden">
                 <div class="segments"></div>
                 <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
@@ -332,16 +398,53 @@
         </div>
     </header>
 
+    <dialog id="alert">
+        <button class="close iconbutton" onclick="this.parentElement.close()">
+            <img src="res/icons/close.svg" title="close window">
+        </button>
+        <center><img src="res/icons/person.svg"></center>
+        <br>
+        <main></main>
+    </dialog>
+
+    <dialog id="job-offer">
+        <button class="close iconbutton" onclick="this.parentElement.close()">
+            <img src="res/icons/close.svg" title="close window">
+        </button>
+        <center><img src="res/icons/person.svg"></center>
+        <p>
+            <b class="contact-name">friend</b> has a job for you.
+        </p>
+        <center>
+            <p class="job"></p>
+            <button name="accept">ACCEPT</button>
+            <button name="reject">REJECT</button>
+            <button name="fulfill" class="hidden">FULFILL</button>
+        </center>
+    </dialog>
+
+    <dialog id="view-job">
+        <button class="close iconbutton" onclick="this.parentElement.close()">
+            <img src="res/icons/close.svg" title="close window">
+        </button>
+        <center><img src="res/icons/person.svg"></center>
+        <p>
+            a job from <b class="contact-name">friend</b>.
+        </p>
+        <center>
+            <p class="job"></p>
+            <button name="fulfill">FULFILL</button>
+        </center>
+    </dialog>
+
     <template id="location-menu">
         <div class="location hidden">
             <figure>
-                <figcaption>location</figcaption>
-                <div>
-                    <img src="res/locations/default.jpg" alt="photo of location">
-                    <div class="buttons">
-                        <!-- <button>buses</button>
-                        <button>station timetable</button> -->
-                    </div>
+                <div class="objects"></div>
+                <img src="res/locations/default.jpg" alt="photo of location">
+                <div class="buttons">
+                    <!-- <button>buses</button>
+                    <button>station timetable</button> -->
                 </div>
             </figure>
             <div class="actions-container">
@@ -360,7 +463,7 @@
                     </button>
                 </div>
                 <button class="route iconbutton">
-                    <img src="res/icons/route.svg" title="route from here">
+                    <img src="res/icons/route.svg" title="calculate route from here">
                 </button>
                 <button class="clear-route iconbutton hidden" onclick="set_current_route()">
                     <img src="res/icons/close.svg" title="close route">
@@ -372,9 +475,10 @@
 </body>
 
 <script src="js/util.js"></script>
+<script src="js/object.js"></script>
 <script src="js/location.js"></script>
 <script src="js/route.js"></script>
-<script src="js/guy.js"></script>
+<script src="js/player.js"></script>
 <script src="js/game.js"></script>
 <script>
     init();

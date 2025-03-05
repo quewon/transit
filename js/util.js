@@ -1,3 +1,11 @@
+// game
+
+function alert(text, icon) {
+    ui.alert.querySelector("center img").src = icon;
+    ui.alert.querySelector("main").textContent = text;
+    ui.alert.showModal();
+}
+
 function get_duration_string(duration) {
     return Math.round(duration/10) + "s";
 }
@@ -80,9 +88,27 @@ function canvas_to_screen(v2) {
 }
 
 function jumpto(v2) {
+    if (!following || v2 != following) mouse.down = false;
     if (following && v2 != following) following.unfollow();
     if (v2 != player) ui.locationbutton.classList.remove("hidden");
     desired_map_offset = v2_mul(v2, -1);
+}
+
+function v2_move_towards(a, b, distance) {
+    let max_distance = v2_distance(a, b);
+    if (distance >= max_distance) return b;
+
+    let direction = v2_normalize(v2_sub(b, a));
+    return v2_add(a, v2_mul(direction, distance));
+}
+
+function v2_normalize(v2) {
+    if (v2.x == 0 && v2.y == 0) return v2;
+    let length = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+    return {
+        x: v2.x / length,
+        y: v2.y / length
+    }
 }
 
 function v2_copy(v2) {

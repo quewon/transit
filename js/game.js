@@ -1,6 +1,19 @@
+const CONTACTS = {
+    "childhood friend": {
+        icon: ":)",
+        trust_condition: ["CALL"]
+    },
+    "friend of a friend": {
+        icon: ":-)",
+        trust_condition: ["TRUST: childhood friend"]
+    },
+};
+
 const context = canvas.getContext("2d");
 const ui = {
+    "alert": document.getElementById("alert"),
     "map": document.getElementById("map"),
+    "locationmenus": document.getElementById("location-menus"),
     "route": document.getElementById("route"),
     "routedata": document.getElementById("route-data"),
     "routeinfo": document.querySelector("#route-data .info"),
@@ -9,7 +22,9 @@ const ui = {
     "segmentinfo": document.querySelector("#segment-data .info"),
     "locationbutton": document.getElementById("current-location"),
     "gobutton": document.getElementById("go-button"),
-    "playerroute": document.getElementById("current-player-route")
+    "playerroute": document.getElementById("current-player-route"),
+    "joboffer": document.getElementById("job-offer"),
+    "viewjob": document.getElementById("view-job")
 }
 const icons = load_images({
     "location-pin": "res/icons/route-location-pin.svg",
@@ -19,7 +34,6 @@ const icons = load_images({
 var mouse;
 var previous_tick;
 
-var guys = [];
 var player;
 var following;
 
@@ -33,8 +47,8 @@ var current_route;
 const MAP_RADIUS = 5;
 const MAP_INTERVAL = 50;
 const MAP_SMOOTH = .2;
-const MIN_ZOOM = .2;
-const MAX_ZOOM = 5;
+const MIN_ZOOM = .3;
+const MAX_ZOOM = 4;
 var screen_offset;
 var pixel_scale;
 var map_zoom = 1;
@@ -58,6 +72,7 @@ function init() {
                     { x: e.touches[0].clientX, y: e.touches[0].clientY },
                     { x: e.touches[1].clientX, y: e.touches[1].clientY }
                 );
+                mouse.down = false;
             } else if (e.touches.length == 1) {
                 mouse.screen_x = e.touches[0].clientX;
                 mouse.screen_y = e.touches[0].clientY;
@@ -85,10 +100,14 @@ function init() {
 
     resize();
 
-    //
+    // generate map
+
+    const home = new StaticLocation(0, 0, "home");
+    locations.push(home);
 
     for (let y=-MAP_RADIUS; y<=MAP_RADIUS; y++) {
         for (let x=-MAP_RADIUS; x<=MAP_RADIUS; x++) {
+            if (x == 0 && y == 0) continue;
             if (x * x + y * y > MAP_RADIUS * MAP_RADIUS) continue;
             if (Math.random() > .2) continue;
 
@@ -99,9 +118,34 @@ function init() {
         }
     }
 
-    player = new Guy();
-    guys.push(player);
-    player.follow();
+    // generate contacts
+
+    player = new Player(home);
+
+    home.add_object(new Object(
+        "a package",
+        "res/icons/package.svg",
+        () => {
+            player.add_money(100);
+        }
+    ));
+
+    alert("a package has arrived at home.", "res/icons/package.svg");
+
+    home.add_object(new Contact(
+        "broke friend",
+        new Job({
+            title: "I REALLY NEED A LOAN, MAN",
+            description: "give 50 money",
+            fulfillable: () => {
+                return player.money >= 50;
+            },
+            fulfill: () => {
+                player.money -= 50;
+                alert("50 money lost.", "res/icons/money.svg");
+            }
+        })
+    ))
 
     //
 
@@ -126,10 +170,8 @@ function update() {
     for (let location of locations) {
         location.update();
     }
-
-    for (let guy of guys) {
-        guy.update(delta);
-    }
+    
+    player.update(delta);
 
     if (current_route && current_route.focused_segment && mouse.just_released) {
         current_route.focused_segment.unfocus();
@@ -142,6 +184,28 @@ function update() {
     mouse.just_released = false;
 }
 
+function draw_grid() {
+    let interval = MAP_INTERVAL;
+    let mod = {
+        x: map_offset.x % interval,
+        y: map_offset.y % interval
+    }
+    let height = Math.round(window.innerHeight / 2 / map_zoom / interval) * interval;
+    let width = Math.round(window.innerWidth / 2 / map_zoom / interval) * interval;
+    let dots_radius = Math.min(map_zoom*2, 2);
+    context.fillStyle = "rgba(0, 0, 0, .1)";
+    for (let y=-height; y<=height; y+=interval) {
+        for (let x=-width; x<=width; x+=interval) {
+            draw_circle(
+                (x + mod.x) * map_zoom,
+                (y + mod.y) * map_zoom,
+                dots_radius
+            );
+            context.fill();
+        }
+    }
+}
+
 function draw() {
     document.body.classList.remove("pointing");
     
@@ -151,30 +215,13 @@ function draw() {
         context.scale(pixel_scale, pixel_scale);
 
         // map
-        let interval = MAP_INTERVAL;
-        let mod = {
-            x: map_offset.x % interval,
-            y: map_offset.y % interval
-        }
-        context.fillStyle = "rgba(0, 0, 0, .1)";
-        for (let y=-window.innerHeight / map_zoom; y<=window.innerHeight / map_zoom; y+=interval) {
-            for (let x=-window.innerWidth / map_zoom; x<=window.innerWidth / map_zoom; x+=interval) {
-                draw_circle(
-                    (Math.round(x / interval) * interval + mod.x) * map_zoom,
-                    (Math.round(y / interval) * interval + mod.y) * map_zoom,
-                    2
-                );
-                context.fill();
-            }
-        }
+        draw_grid();
 
         for (let location of locations) {
             location.draw();
         }
 
-        if (current_route) {
-            current_route.draw();
-        }
+        if (current_route) current_route.draw();
 
         player.draw();
     context.restore();
@@ -233,7 +280,7 @@ function mousemove(e) {
             { x: e.touches[1].clientX, y: e.touches[1].clientY }
         );
         let delta = pinch - mouse.pinch;
-        map_zoom += delta/2000;
+        map_zoom += delta/1000;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
         mouse.pinch = pinch;
     }

@@ -122,8 +122,8 @@ class Route {
         this.update_duration();
     }
 
-    draw(color) {
-        context.strokeStyle = color || "blue";
+    draw() {
+        context.strokeStyle = (this.is_locked && current_route != this) ? "black" : "blue";
         for (let segment of this.segments) {
             segment.draw_path(this.is_tentative);
         }
@@ -135,13 +135,16 @@ class Route {
 
         if (this.segments.length > 0) {
             this.start().draw_on_map();
-            let end_location = position_to_canvas(this.segments[this.segments.length - 1].end);
+            this.draw_pins();
+        }
+    }
 
-            if (color == "black") {
-                draw_pin(icons["location-pin-black"], end_location.x, end_location.y);
-            } else {
-                draw_pin(icons["location-pin"], end_location.x, end_location.y);
-            }
+    draw_pins() {
+        let end_location = position_to_canvas(this.segments[this.segments.length - 1].end);
+        if (this.is_locked && current_route != this) {
+            draw_pin(icons["location-pin-black"], end_location.x, end_location.y);
+        } else {
+            draw_pin(icons["location-pin"], end_location.x, end_location.y);
         }
     }
 
@@ -198,7 +201,7 @@ class RouteSegment {
     route;
     start;
     end;
-    path = [];
+    path;
     center;
     duration;
 
@@ -214,11 +217,12 @@ class RouteSegment {
         this.center = v2_lerp(end, start, .5);
         this.element = document.createElement("div");
         this.element.classList.add("segment");
-        this.calculate_path();
-        this.calculate_duration();
+        this.calculate();
     }
 
-    calculate_path() {
+    calculate() {
+        this.path = [];
+        this.calculate_duration();
     }
 
     calculate_duration() {
@@ -233,7 +237,9 @@ class RouteSegment {
         let info = document.createElement("div");
         info.className = "info";
         info.appendChild(this.start.anchor());
-        info.innerHTML += "<img src='res/icons/dots-horizontal.svg'>";
+        let img = document.createElement("img");
+        img.src = "res/icons/dots-horizontal.svg";
+        info.appendChild(img);
         info.appendChild(this.end.anchor());
         let duration = document.createElement("div");
         duration.className = "duration-estimate";
@@ -243,7 +249,7 @@ class RouteSegment {
 
         let button = document.createElement("button");
         button.className = "iconbutton";
-        let img = document.createElement("img");
+        img = document.createElement("img");
         img.src = "res/icons/"+type+".svg";
         button.appendChild(img);
         
@@ -306,9 +312,11 @@ class WalkSegment extends RouteSegment {
         this.init_element("walk");
     }
 
-    calculate_path() {
+    calculate() {
+        this.path = [];
         this.path.push(v2_copy(this.start));
         this.path.push(v2_copy(this.end));
+        this.calculate_duration();
     }
 }
 

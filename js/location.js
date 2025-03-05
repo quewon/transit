@@ -2,7 +2,9 @@ class Location {
     x; y;
     r = 5;
     desired_r = 5;
+
     anchor_element;
+    icons_element;
 
     constructor(x, y) {
         this.x = x;
@@ -14,6 +16,28 @@ class Location {
         icon.src = "res/icons/circle.svg";
         anchor.appendChild(icon);
         this.anchor_element = anchor;
+    }
+
+    add_object(object) {
+        if (!this.icons_element) {
+            let icons = document.createElement("div");
+            icons.className = "location-icons iconbutton";
+            ui.map.appendChild(icons);
+            this.icons_element = icons;
+            this.icons_element.onclick = this.select.bind(this);
+        }
+
+        object.location = this;
+        this.icons_element.appendChild(object.icon_element);
+    }
+
+    remove_object(object) {
+        object.location = null;
+        object.icon_element.remove();
+        if (!this.icons_element.firstElementChild) {
+            this.icons_element.remove();
+            this.icons_element = null;
+        }
     }
 
     anchor() {
@@ -37,7 +61,11 @@ class Location {
         let p = position_to_canvas(this);
         draw_circle(p.x, p.y, this.r);
 
-        if (current_route && current_route.contains(this) || this == route_location) {
+        if (current_route && current_route.is_tentative && route_location == this && !current_route.contains(this)) {
+            context.fillStyle = "blue";
+        } else if (player.location == this) {
+            context.fillStyle = "red";
+        } else if (current_route && current_route.contains(this) || route_location == this) {
             context.fillStyle = "blue";
         } else if (player.route && player.route.contains(this)) {
             context.fillStyle = "black";
@@ -53,10 +81,17 @@ class Location {
         } else {
             context.fill();
         }
+
+        if (this.icons_element) {
+            let screen_position = canvas_to_screen(position_to_canvas(this));
+            this.icons_element.style.top = screen_position.y + "px";
+            this.icons_element.style.left = screen_position.x + "px";
+        }
     }
 }
 
 class StaticLocation extends Location {
+    name;
     is_static = true;
     selected = false;
     click_ready = false;
@@ -64,23 +99,23 @@ class StaticLocation extends Location {
     touch_padding = MAP_INTERVAL/4;
 
     menu;
+    objects_menu;
     clear_route_button;
     route_button;
 
-    constructor(x, y) {
+    constructor(x, y, name) {
         super(x, y);
+
+        this.name = name || "a location";
 
         // modify anchor
 
         this.anchor_element.querySelector("img").src = "res/icons/location-pin.svg";
-        this.anchor_element.onclick = this.select.bind(this);
 
         // create menu
 
         let menu = copy_template("location-menu");
         let img = menu.querySelector("img");
-
-        menu.querySelector("figcaption").textContent = this.name;
 
         this.buttons = {
             "walk": menu.querySelector(".walk"),
@@ -94,7 +129,7 @@ class StaticLocation extends Location {
             }.bind(this);
         }
 
-        ui.map.appendChild(menu);
+        ui.locationmenus.appendChild(menu);
         this.menu = menu;
 
         this.clear_route_button = menu.querySelector(".clear-route");
@@ -102,6 +137,18 @@ class StaticLocation extends Location {
 
         this.clear_route_button.onclick = this.clear_route.bind(this);
         this.route_button.onclick = this.route_from_here.bind(this);
+
+        this.objects_menu = menu.querySelector(".objects");
+    }
+
+    add_object(object) {
+        super.add_object(object);
+        this.objects_menu.appendChild(object.button);
+    }
+
+    remove_object(object) {
+        super.remove_object(object);
+        object.button.remove();
     }
 
     go_via(action) {
@@ -203,18 +250,24 @@ class StaticLocation extends Location {
     deselect() {
         this.selected = false;
         selected_location = null;
-        this.menu.classList.add("hidden");
+        this.hide_window();
     }
 
     show_window() {
         this.menu.classList.remove("hidden");
 
         // update window
-        for (let action in this.buttons) {
-            if (this.available_actions.includes(action)) {
-                this.buttons[action].classList.remove("hidden");
-            } else {
+        if (player.location == this && (!current_route || !current_route.is_tentative)) {
+            for (let action in this.buttons) {
                 this.buttons[action].classList.add("hidden");
+            }
+        } else {
+            for (let action in this.buttons) {
+                if (this.available_actions.includes(action)) {
+                    this.buttons[action].classList.remove("hidden");
+                } else {
+                    this.buttons[action].classList.add("hidden");
+                }
             }
         }
 
@@ -225,9 +278,12 @@ class StaticLocation extends Location {
             this.clear_route_button.classList.add("hidden");
             this.route_button.classList.remove("hidden");
         }
+
+        if (this.icons_element) this.icons_element.classList.add("hidden");
     }
 
     hide_window() {
         this.menu.classList.add("hidden");
+        if (this.icons_element) this.icons_element.classList.remove("hidden");
     }
 }
