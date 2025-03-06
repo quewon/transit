@@ -3,14 +3,16 @@ const MISSIONS = [
         location: "airport",
         location_image: "res/locations/airport.jpg",
         prompt: "from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.",
+        icon: "res/icons/missions/plane.svg",
         title: "BUSINESS CALLS",
-        description: "pay 150 money for a plane ticket at the airport.",
+        description: "pay 15 money for a plane ticket at the airport.",
+        duration: 5 * 60,
         fulfillable: () => {
-            return player.money >= 150
+            return player.money >= 15
         },
         fulfill: () => {
-            player.money -= 150;
-            alert("150 money lost. mission success.", "res/icons/star.svg");
+            player.money -= 15;
+            alert("15 money lost. mission success.", "res/icons/star.svg");
         }
     }
 ]
@@ -19,19 +21,19 @@ const CONTACTS = {
     "broke friend": {
         name: "broke friend",
         stats: { talk: 2 },
-        trust_conditions: "give them a loan",
+        favor_condition: "give them a loan",
         job: {
             title: "I REALLY NEED A LOAN, MAN",
-            description: "deliver 50 money to broke friend.",
+            description: "deliver 3 money to broke friend.",
             destination: "CONTACT: broke friend",
             fulfillable: () => {
-                return player.money >= 50;
+                return player.money >= 3;
             },
             fulfill: () => {
-                player.money -= 50;
-                contacts["broke friend"].trusted = true;
+                player.money -= 3;
+                contacts["broke friend"].win_favor();
                 contacts["broke friend"].name = "friend";
-                alert("50 money lost. your friend's gratitude earned.", "res/icons/money.svg");
+                alert("3 money lost. your friend's gratitude earned.", "res/icons/money.svg");
             }
         }
     },
@@ -41,7 +43,7 @@ const CONTACTS = {
         spawnable: () => {
             return !!contacts["broke friend"];
         },
-        trust_conditions: "earn <b>broke friend</b>'s trust"
+        favor_condition: "earn <b>broke friend</b>'s favor"
     }
 }
 
@@ -49,6 +51,7 @@ const context = canvas.getContext("2d");
 const ui = {
     "favicon": document.querySelector("link[rel~='icon']"),
     "alert": document.getElementById("alert"),
+    "timer": document.getElementById("timer"),
     "map": document.getElementById("map"),
     "locationmenus": document.getElementById("location-menus"),
     "route": document.getElementById("route"),
@@ -63,12 +66,25 @@ const ui = {
     "joboffer": document.getElementById("job-offer"),
     "viewjob": document.getElementById("view-job"),
     "viewcontact": document.getElementById("view-contact")
+};
+const _rootstyle = window.getComputedStyle(document.documentElement);
+const palette = {
+    "background": _rootstyle.getPropertyValue("--background"),
+    "map-grid": _rootstyle.getPropertyValue("--map-grid"),
+    "text": _rootstyle.getPropertyValue("--text"),
+    "location": _rootstyle.getPropertyValue("--location"),
+    "player": _rootstyle.getPropertyValue("--player"),
+    "route": _rootstyle.getPropertyValue("--route"),
+    "route-locked": _rootstyle.getPropertyValue("--route-locked"),
 }
 
 var mouse;
 var previous_tick;
+
+const TIME_SCALE = 100;
 var game_paused = false;
 var game_timeouts;
+var game_time;
 
 var player;
 var following;
@@ -155,7 +171,7 @@ function init_level() {
 
     locations = [];
 
-    const home = new StaticLocation(0, 0, "home");
+    const home = new StaticLocation(0, 0, "home", "res/locations/home.jpg");
     locations.push(home);
 
     for (let y=-MAP_RADIUS; y<=MAP_RADIUS; y++) {
@@ -187,10 +203,10 @@ function init_level() {
         "res/icons/package.svg",
         {
             onclick: () => {
-                player.add_money(100);
+                player.add_money(5);
                 set_game_timeout(() => {
                     home.add_object(new MissionPrompt(mission));
-                }, 1000 * 1);
+                }, 1000 * 15);
             }
         }
     ));
@@ -217,6 +233,9 @@ function init_level() {
 
     game_paused = false;
     game_timeouts = [];
+    game_time = null;
+    ui.timer.classList.add("hidden");
+    ui.timer.textContent = get_time_string(mission.duration * 1000 * TIME_SCALE);
 }
 
 function tick() {
@@ -232,6 +251,16 @@ function update() {
     //
 
     if (!game_paused) {
+        if (game_time != null) {
+            game_time -= delta * TIME_SCALE;
+            ui.timer.textContent = get_time_string(game_time);
+            if (game_time < 0) {
+                game_time = null;
+                ui.timer.textContent = "0:00";
+                alert("you failed to get to your destination in time.", "res/icons/flower.svg");
+            }
+        }
+
         for (let i=game_timeouts.length-1; i>=0; i--) {
             game_timeouts[i].time -= delta;
             if (game_timeouts[i].time <= 0) {
@@ -269,7 +298,7 @@ function draw_grid() {
     let height = Math.round(window.innerHeight / 2 / map_zoom / interval) * interval;
     let width = Math.round(window.innerWidth / 2 / map_zoom / interval) * interval;
     let dots_radius = Math.min(map_zoom*2, 2);
-    context.fillStyle = "rgba(0, 0, 0, .1)";
+    context.fillStyle = palette["map-grid"];
     for (let y=-height; y<=height; y+=interval) {
         for (let x=-width; x<=width; x+=interval) {
             draw_circle(
@@ -311,7 +340,6 @@ function resize() {
     } else {
         pixel_scale = window.devicePixelRatio;
     }
-    document.documentElement.style.setProperty("--pixel", window.devicePixelRatio + "px");
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
     canvas.style.width = window.innerWidth + "px";

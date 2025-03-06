@@ -43,7 +43,11 @@ class Object {
 }
 
 class Contact extends Object {
-    trusted = false;
+    favor_won = false;
+    job;
+    stats;
+    favor_condition;
+    stats_element;
 
     constructor(contact) {
         super(contact.name, contact.icon || "res/icons/person.svg");
@@ -54,13 +58,39 @@ class Contact extends Object {
             this.job = new Job(contact.job);
             this.job.contact = this;
         }
+
+        let stats = document.createElement("div");
+        stats.setAttribute("name", "stats");
+        for (let stat in contact.stats) {
+            for (let i=0; i<contact.stats[stat]; i++) {
+                let img = document.createElement("img");
+                img.src = "res/icons/stats/"+stat+".svg";
+                stats.appendChild(img);
+            }
+        }
+        this.stats = contact.stats;
+        this.stats_element = stats;
+
+        this.favor_condition = contact.favor_condition;
+    }
+
+    win_favor() {
+        this.favor_won = true;
     }
 
     onclick() {
         ui.viewcontact.querySelector("[name='contact-name'").textContent = this.name;
-        ui.viewcontact.querySelector("[name='trust-state'").textContent = this.trusted ? "in trust" : "not in trust";
+        ui.viewcontact.querySelector("[name='stats'").replaceWith(this.stats_element);
+
+        let favor_condition = ui.viewcontact.querySelector(".favor-condition-container");
+        if (this.favor_won) {
+            favor_condition.classList.add("hidden");
+        } else {
+            ui.viewcontact.querySelector("[name='favor-condition'").innerHTML = this.favor_condition;
+            favor_condition.classList.remove("hidden");
+        }
+
         ui.viewcontact.showModal();
-        game_paused = true;
     }
 
     onclick_elsewhere() {
@@ -128,8 +158,6 @@ class Job extends Object {
             ui.viewjob.querySelector("[name='job']").replaceWith(this.element);
             ui.viewjob.showModal();
         }
-
-        game_paused = true;
     }
 
     accept() {
@@ -142,7 +170,10 @@ class Job extends Object {
         if (this.destination) {
             if (this.destination.includes("CONTACT: ")) {
                 let contact_name = this.destination.split("CONTACT: ")[1];
-                contacts[contact_name].location.add_object(this);
+                let location = contacts[contact_name].location;
+                location.add_object(this);
+                if (selected_location) selected_location.deselect();
+                jumpto(location);
             }
         }
     }
@@ -155,7 +186,6 @@ class Job extends Object {
     close() {
         ui.joboffer.close();
         ui.viewjob.close();
-        game_paused = false;
     }
 }
 
@@ -175,7 +205,7 @@ class MissionPrompt extends Object {
                 let mission = new Mission(this.mission);
                 mission.contact = new Contact({
                     name: "the boss",
-                    icon: "res/icons/star.svg"
+                    icon: mission.icon
                 })
                 location.add_object(mission);
                 if (selected_location) selected_location.deselect();
@@ -183,6 +213,9 @@ class MissionPrompt extends Object {
                 break;
             }
         }
+
+        game_time = this.mission.duration * 1000 * TIME_SCALE;
+        ui.timer.classList.remove("hidden");
     }
 
     onadd(location) {
@@ -195,7 +228,7 @@ class MissionPrompt extends Object {
 class Mission extends Job {
     constructor(mission) {
         mission.type = "mission";
-        mission.icon = "res/icons/star.svg";
+        mission.icon = mission.icon || "res/icons/missions/generic.svg";
         mission.accepted = true;
         super(mission);
     }

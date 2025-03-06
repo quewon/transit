@@ -224,6 +224,7 @@ class Route {
 }
 
 class RouteSegment {
+    speed;
     route;
     start;
     end;
@@ -237,7 +238,8 @@ class RouteSegment {
     info_element;
     button;
 
-    constructor(start, end) {
+    constructor(start, end, speed) {
+        this.speed = speed || 1;
         this.start = start;
         this.end = end;
         this.center = v2_lerp(end, start, .5);
@@ -256,7 +258,7 @@ class RouteSegment {
         for (let i=0; i<this.path.length-1; i++) {
             total += v2_distance(this.path[i], this.path[i+1]);
         }
-        this.duration = total;
+        this.duration = total * 1000 / this.speed;
     }
 
     init_element(type) {
@@ -336,7 +338,7 @@ class RouteSegment {
 
 class WalkSegment extends RouteSegment {
     constructor(start, end) {
-        super(start, end);
+        super(start, end, .1);
         this.init_element("walk");
     }
 

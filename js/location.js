@@ -62,20 +62,20 @@ class Location {
         draw_circle(p.x, p.y, this.r);
 
         if (current_route && current_route.is_tentative && route_location == this && !current_route.contains(this)) {
-            context.fillStyle = "blue";
+            context.fillStyle = palette.route;
         } else if (player.location == this) {
-            context.fillStyle = "red";
+            context.fillStyle = palette.player;
         } else if (current_route && current_route.contains(this) || route_location == this) {
-            context.fillStyle = "blue";
+            context.fillStyle = palette.route;
         } else if (player.route && player.route.contains(this)) {
-            context.fillStyle = "black";
+            context.fillStyle = palette["route-locked"];
         } else {
-            context.fillStyle = "#00FF00";
+            context.fillStyle = palette.location;
         }
 
         if (!this.is_static) {
             context.strokeStyle = context.fillStyle;
-            context.fillStyle = "white";
+            context.fillStyle = palette.background;
             context.fill();
             context.stroke();
         } else {
@@ -103,7 +103,7 @@ class StaticLocation extends Location {
     clear_route_button;
     route_button;
 
-    constructor(x, y, name) {
+    constructor(x, y, name, image) {
         super(x, y);
 
         this.name = name || "a location";
@@ -115,6 +115,7 @@ class StaticLocation extends Location {
         // create menu
 
         let menu = copy_template("location-menu");
+        if (image) menu.querySelector("figure img").src = image;
 
         this.buttons = {
             "walk": menu.querySelector(".walk"),
@@ -248,11 +249,12 @@ class StaticLocation extends Location {
             }
         }
         if (selected_location) selected_location.deselect();
-        this.selected = true;
-        selected_location = this;
 
         this.show_window();
         jumpto(v2_add(this, { x:0, y:-canvas.height/5/pixel_scale/map_zoom }));
+
+        this.selected = true;
+        selected_location = this;
     }
 
     deselect() {

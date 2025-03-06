@@ -11,11 +11,35 @@ function alert(text, icon) {
     ui.alert.querySelector("center img").src = icon;
     ui.alert.querySelector("main").innerHTML = text;
     ui.alert.showModal();
-    game_paused = true;
 }
 
 function get_duration_string(duration) {
-    return Math.round(duration/10) + "s";
+    let s = Math.round(duration/1000 / TIME_SCALE);
+    let seconds = s%60;
+    let minutes = Math.floor(s/60%60);
+    let hours = Math.floor(s/60/60);
+    if (hours > 0) {
+        return hours+"h "+minutes+"m";
+    } else if (minutes > 0) {
+        return minutes+"m "+seconds+"s";
+    } else {
+        return seconds+"s";
+    }
+}
+
+function get_time_string(duration) {
+    let s = duration/1000 / TIME_SCALE;
+    let seconds = Math.floor(s%60);
+    let minutes = Math.floor(s/60%60);
+    let hours = Math.floor(s/60/60);
+    if (seconds < 10) seconds = "0"+seconds;
+
+    if (hours > 0) {
+        if (minutes < 10) minutes = "0"+minutes;
+        return hours+":"+minutes+":"+seconds;
+    } else {
+        return minutes+":"+seconds;
+    }
 }
 
 //dom

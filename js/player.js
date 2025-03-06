@@ -1,6 +1,7 @@
 class Player {
     x; y;
     location;
+    
     money = 0;
 
     route;
@@ -49,7 +50,7 @@ class Player {
         if (this.route) this.route.draw();
 
         if (!this.location) {
-            context.fillStyle = "red";
+            context.fillStyle = palette.player;
             let p = position_to_canvas(this);
             draw_circle(p.x, p.y, 4);
             context.fill();
@@ -67,7 +68,7 @@ class Player {
         if (this.route) {
             let segment = this.route.segments[this.segment_index];
             let point = segment.path[this.point_index];
-            let position = v2_move_towards(this, point, delta/100);
+            let position = v2_move_towards(this, point, delta/1000 * TIME_SCALE * segment.speed);
 
             this.x = position.x;
             this.y = position.y;
@@ -80,8 +81,18 @@ class Player {
                     if (this.segment_index >= this.route.segments.length) {
                         // arrived at location
                         this.location = this.route.end();
-                        this.location.select();
-                        if (current_route == this.route) set_current_route();
+                        if (selected_location) selected_location.deselect();
+                        jumpto(this.location);
+                        if (current_route == this.route) {
+                            set_current_route();
+                        } else if (
+                            current_route && 
+                            current_route.is_tentative && 
+                            current_route.start() == this.location
+                        ) {
+                            current_route.is_tentative = false;
+                            ui.gobutton.classList.remove("hidden");
+                        }
                         ui.playerroute.classList.add("hidden");
                         if (selected_location) selected_location.show_window();
                         this.route.remove();
