@@ -321,9 +321,9 @@ class RouteSegment {
 
         if (is_tentative) context.setLineDash([3]);
         if (this.focused) {
-            context.lineWidth = 3 * pixel_scale;
+            context.lineWidth = 3 * dpi * pixel_scale;
         } else {
-            context.lineWidth = pixel_scale;
+            context.lineWidth = dpi * pixel_scale;
         }
         
         context.beginPath();
@@ -336,7 +336,6 @@ class RouteSegment {
         context.stroke();
 
         if (is_tentative) context.setLineDash([]);
-        if (this.focused) context.lineWidth = 1;
     }
 }
 

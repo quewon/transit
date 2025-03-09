@@ -102,18 +102,7 @@
         .location-icons * {
             pointer-events: none;
         }
-        .location-icons::after {
-            content: "";
-            background-image: url(res/icons/plus.svg);
-            display: inline-block;
-            width: var(--icon-size);
-            height: var(--icon-size);
-            background-size: var(--icon-size);
-        }
         .location-icons .iconbutton:not(:last-child) {
-            display: none;
-        }
-        .location-icons:has(.iconbutton:only-child)::after {
             display: none;
         }
 

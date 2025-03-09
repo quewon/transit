@@ -104,6 +104,7 @@ const MAP_SMOOTH = .013;
 const MIN_ZOOM = .3;
 const MAX_ZOOM = 4;
 var screen_offset;
+var dpi;
 var pixel_scale;
 var map_zoom = 1;
 var map_offset = { x:0, y:0 };
@@ -302,8 +303,8 @@ function draw_grid() {
     for (let y=-height; y<=height; y+=interval) {
         for (let x=-width; x<=width; x+=interval) {
             draw_circle(
-                (x + mod.x) * map_zoom * pixel_scale,
-                (y + mod.y) * map_zoom * pixel_scale,
+                (x + mod.x) * map_zoom * dpi,
+                (y + mod.y) * map_zoom * dpi,
                 dots_radius
             );
             context.fill();
@@ -317,7 +318,6 @@ function draw() {
     context.save();
         context.translate(screen_offset.x, screen_offset.y);
         context.clearRect(-screen_offset.x, -screen_offset.y, canvas.width, canvas.height);
-        context.scale(window.devicePixelRatio, window.devicePixelRatio);
 
         // map
         draw_grid();
@@ -335,9 +335,14 @@ function draw() {
 //
 
 function resize() {
-    pixel_scale = window.devicePixelRatio;
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
+    dpi = window.devicePixelRatio;
+    if (dpi >= 2) {
+        pixel_scale = 1.7;
+    } else {
+        pixel_scale = 1;
+    }
+    canvas.width = window.innerWidth * dpi;
+    canvas.height = window.innerHeight * dpi;
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
     screen_offset = { x: canvas.width/2, y: canvas.height/2 };
@@ -372,7 +377,7 @@ function mousemove(e) {
             if (following) following.unfollow();
             ui.locationbutton.classList.remove("hidden");
         }
-        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / window.devicePixelRatio / pixel_scale / map_zoom));
+        desired_map_offset = v2_add(desired_map_offset, v2_div(delta, map_zoom));
     }
 
     if (e.touches && mouse.pinch && e.touches.length == 2) {
@@ -381,7 +386,7 @@ function mousemove(e) {
             { x: e.touches[1].clientX, y: e.touches[1].clientY }
         );
         let delta = pinch - mouse.pinch;
-        map_zoom += (delta/700) * window.devicePixelRatio * map_zoom;
+        map_zoom += (delta/700) * dpi * map_zoom;
         map_zoom = clamp(MIN_ZOOM, map_zoom, MAX_ZOOM);
         mouse.pinch = pinch;
     }

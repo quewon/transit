@@ -54,7 +54,7 @@ function copy_template(template_id) {
 
 function draw_circle(x, y, radius) {
     context.beginPath();
-    context.arc(x, y, radius * pixel_scale, 0, Math.PI*2);
+    context.arc(x, y, radius * dpi * pixel_scale, 0, Math.PI*2);
 }
 
 //math
@@ -86,19 +86,19 @@ function point_in_rect(point, rect) {
 //v2 
 
 function position_to_canvas(v2) {
-    return v2_mul(v2_add(v2, map_offset), map_zoom * pixel_scale);
+    return v2_mul(v2_add(v2, map_offset), map_zoom * dpi);
 }
 
 function canvas_to_position(v2) {
-    return v2_sub(v2_div(v2, map_zoom * pixel_scale), map_offset);
+    return v2_sub(v2_div(v2, map_zoom * dpi), map_offset);
 }
 
 function screen_to_canvas(v2) {
-    return v2_div(v2_sub(v2_mul(v2, window.devicePixelRatio), screen_offset), pixel_scale);
+    return v2_sub(v2_mul(v2, dpi), screen_offset);
 }
 
 function canvas_to_screen(v2) {
-    return v2_div(v2_add(v2_mul(v2, pixel_scale), screen_offset), window.devicePixelRatio);
+    return v2_div(v2_add(v2, screen_offset), dpi);
 }
 
 function jumpto(v2) {
