@@ -335,11 +335,7 @@ function draw() {
 //
 
 function resize() {
-    if (window.devicePixelRatio >= 2) {
-        pixel_scale = window.devicePixelRatio * 1.7;
-    } else {
-        pixel_scale = window.devicePixelRatio;
-    }
+    pixel_scale = window.devicePixelRatio;
     canvas.width = window.innerWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight * window.devicePixelRatio;
     canvas.style.width = window.innerWidth + "px";
@@ -376,7 +372,7 @@ function mousemove(e) {
             if (following) following.unfollow();
             ui.locationbutton.classList.remove("hidden");
         }
-        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / pixel_scale / map_zoom));
+        desired_map_offset = v2_add(desired_map_offset, v2_mul(delta, window.devicePixelRatio / window.devicePixelRatio / pixel_scale / map_zoom));
     }
 
     if (e.touches && mouse.pinch && e.touches.length == 2) {
