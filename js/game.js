@@ -100,7 +100,7 @@ var contacts;
 
 const MAP_RADIUS = 5;
 const MAP_INTERVAL = 50;
-const MAP_SMOOTH = .2;
+const MAP_SMOOTH = .013;
 const MIN_ZOOM = .3;
 const MAX_ZOOM = 4;
 var screen_offset;
@@ -181,8 +181,8 @@ function init_level() {
             if (Math.random() > .2) continue;
 
             locations.push(new StaticLocation(
-                x*MAP_INTERVAL + Math.random() * random(-10, 10), 
-                y*MAP_INTERVAL + Math.random() * random(-10, 10)
+                x*MAP_INTERVAL, 
+                y*MAP_INTERVAL
             ));
         }
     }
@@ -270,7 +270,7 @@ function update() {
         }
     }
 
-    map_offset = v2_lerp(map_offset, desired_map_offset, MAP_SMOOTH);
+    map_offset = v2_lerp(map_offset, desired_map_offset, MAP_SMOOTH * delta);
 
     for (let location of locations) {
         location.update();
@@ -302,8 +302,8 @@ function draw_grid() {
     for (let y=-height; y<=height; y+=interval) {
         for (let x=-width; x<=width; x+=interval) {
             draw_circle(
-                (x + mod.x) * map_zoom,
-                (y + mod.y) * map_zoom,
+                (x + mod.x) * map_zoom * pixel_scale,
+                (y + mod.y) * map_zoom * pixel_scale,
                 dots_radius
             );
             context.fill();
@@ -317,7 +317,7 @@ function draw() {
     context.save();
         context.translate(screen_offset.x, screen_offset.y);
         context.clearRect(-screen_offset.x, -screen_offset.y, canvas.width, canvas.height);
-        context.scale(pixel_scale, pixel_scale);
+        context.scale(window.devicePixelRatio, window.devicePixelRatio);
 
         // map
         draw_grid();

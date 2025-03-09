@@ -1,3 +1,11 @@
-class Vehicle {
+class Car {
+    path;
+
+    constructor() {
+
+    }
+}
+
+class Bus {
     
 }

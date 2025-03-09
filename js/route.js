@@ -320,7 +320,11 @@ class RouteSegment {
         if (this.path.length == 0) return;
 
         if (is_tentative) context.setLineDash([3]);
-        if (this.focused) context.lineWidth = 3;
+        if (this.focused) {
+            context.lineWidth = 3 * pixel_scale;
+        } else {
+            context.lineWidth = pixel_scale;
+        }
         
         context.beginPath();
         let p0 = position_to_canvas(this.path[0]);

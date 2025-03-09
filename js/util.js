@@ -54,13 +54,7 @@ function copy_template(template_id) {
 
 function draw_circle(x, y, radius) {
     context.beginPath();
-    context.arc(x, y, radius, 0, Math.PI*2);
-}
-
-function draw_pin(img, x, y) {
-    let width = img.naturalWidth;
-    let height = img.naturalHeight;
-    context.drawImage(img, x - width/2, y - height);
+    context.arc(x, y, radius * pixel_scale, 0, Math.PI*2);
 }
 
 //math
@@ -92,11 +86,11 @@ function point_in_rect(point, rect) {
 //v2 
 
 function position_to_canvas(v2) {
-    return v2_mul(v2_add(v2, map_offset), map_zoom);
+    return v2_mul(v2_add(v2, map_offset), map_zoom * pixel_scale);
 }
 
 function canvas_to_position(v2) {
-    return v2_sub(v2_div(v2, map_zoom), map_offset);
+    return v2_sub(v2_div(v2, map_zoom * pixel_scale), map_offset);
 }
 
 function screen_to_canvas(v2) {

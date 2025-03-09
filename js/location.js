@@ -251,7 +251,8 @@ class StaticLocation extends Location {
         if (selected_location) selected_location.deselect();
 
         this.show_window();
-        jumpto(v2_add(this, { x:0, y:-canvas.height/5/pixel_scale/map_zoom }));
+        let height = this.menu.getBoundingClientRect().height;
+        jumpto(v2_add(this, { x:0, y:-height/2/pixel_scale/map_zoom }));
 
         this.selected = true;
         selected_location = this;
