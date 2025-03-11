@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+
+    <link rel="preload" href="res/font/GeistMono.ttf" as="font" />
+    
     <link rel="icon" href="res/icons/location-pin.svg">
     <title>in transit</title>
     <style>
@@ -83,11 +86,6 @@
         .location .iconbutton {
             pointer-events: auto;
         }
-        figure > img {
-            max-width: 10em;
-            width: 70vw;
-            aspect-ratio: 1;
-        }
         .objects {
             position: absolute;
             padding: .5em;
@@ -106,6 +104,11 @@
             display: none;
         }
 
+        .traveler-pin {
+            position: absolute;
+            translate: -50% -50%;
+        }
+
         .actions-container {
             display: flex;
             width: 100%;
@@ -121,21 +124,25 @@
             line-height: 0;
             margin: 0;
             margin-bottom: 4px;
+            position: relative;
+        }
+        figure > img {
+            max-width: 10em;
+            width: 70vw;
+            aspect-ratio: 1;
+        }
+        figure [name="name"] {
+            position: absolute;
+            bottom: 1em;
+            right: .5em;
+            color: var(--background);
         }
         figure > div {
             position: relative;
             line-height: 0;
         }
-        figure .buttons {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            padding: .5em;
-            box-sizing: border-box;
-            text-align: right;
-        }
-        figure .buttons button {
-            border: none;
+        figure .iconbutton {
+            filter: drop-shadow(0 0 3px var(--background));
         }
 
         button {
@@ -489,10 +496,7 @@
             <figure>
                 <div class="objects"></div>
                 <img src="res/locations/default.jpg" alt="photo of location">
-                <div class="buttons">
-                    <!-- <button>buses</button>
-                    <button>station timetable</button> -->
-                </div>
+                <div name="name"></div>
             </figure>
             <div class="actions-container">
                 <div class="actions">
@@ -525,7 +529,7 @@
 <script src="js/object.js"></script>
 <script src="js/location.js"></script>
 <script src="js/route.js"></script>
-<script src="js/player.js"></script>
+<script src="js/traveler.js"></script>
 <script src="js/game.js"></script>
 <script>
     init();

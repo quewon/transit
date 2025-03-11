@@ -86,6 +86,7 @@ var game_paused = false;
 var game_timeouts;
 var game_time;
 
+var cars;
 var player;
 var following;
 
@@ -194,7 +195,7 @@ function init_level() {
     while (mission_location == home) {
         mission_location = locations[locations.length * Math.random() | 0];
     }
-    mission_location.name = mission.location;
+    mission_location.set_name(mission.location);
     mission_location.menu.querySelector("img").src = mission.location_image;
 
     // objects
@@ -237,6 +238,11 @@ function init_level() {
     game_time = null;
     ui.timer.classList.add("hidden");
     ui.timer.textContent = get_time_string(mission.duration * 1000 * TIME_SCALE);
+
+    cars = [];
+    for (let i=0; i<5; i++) {
+        cars.push(new Car(locations[Math.random() * locations.length | 0]));
+    }
 }
 
 function tick() {
@@ -275,6 +281,10 @@ function update() {
 
     for (let location of locations) {
         location.update();
+    }
+
+    for (let car of cars) {
+        car.update(delta);
     }
     
     player.update(delta);
@@ -327,6 +337,10 @@ function draw() {
         }
 
         if (current_route) current_route.draw();
+
+        for (let car of cars) {
+            car.draw();
+        }
 
         player.draw();
     context.restore();

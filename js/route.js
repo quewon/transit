@@ -340,6 +340,8 @@ class RouteSegment {
 }
 
 class WalkSegment extends RouteSegment {
+    type = "walk";
+
     constructor(start, end) {
         super(start, end, .1);
         this.init_element("walk");
@@ -354,28 +356,61 @@ class WalkSegment extends RouteSegment {
 }
 
 class CarSegment extends RouteSegment {
+    type = "car";
+
     constructor(start, end) {
-        super(start, end);
-        
-        this.path.push(v2_copy(start));
-        this.path.push(v2_copy(end));
+        super(start, end, .5);
+        this.init_element("car");
+    }
+
+    calculate() {
+        let start = v2_copy(this.start);
+        let end = v2_copy(this.end);
+
+        this.path = [];
+        this.path.push(start);
+
+        if (this.start.x != this.end.x && this.start.y != this.end.y) {
+            let midpoint = {
+                x: this.start.x,
+                y: this.end.y
+            }
+            this.path.push(midpoint);
+        }
+
+        this.path.push(end);
+        this.calculate_duration();
     }
 }
 
 class BusSegment extends RouteSegment {
+    type = "bus";
+    
     constructor(start, end) {
-        super(start, end);
-        
-        this.path.push(v2_copy(start));
-        this.path.push(v2_copy(end));
+        super(start, end, .1);
+        this.init_element("bus");
+    }
+
+    calculate() {
+        this.path = [];
+        this.path.push(v2_copy(this.start));
+        this.path.push(v2_copy(this.end));
+        this.calculate_duration();
     }
 }
 
 class TrainSegment extends Route {
+    type = "train";
+    
     constructor(start, end) {
-        super(start, end);
-        
-        this.path.push(v2_copy(start));
-        this.path.push(v2_copy(end));
+        super(start, end, .1);
+        this.init_element("train");
+    }
+
+    calculate() {
+        this.path = [];
+        this.path.push(v2_copy(this.start));
+        this.path.push(v2_copy(this.end));
+        this.calculate_duration();
     }
 }

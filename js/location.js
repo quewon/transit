@@ -95,7 +95,7 @@ class StaticLocation extends Location {
     is_static = true;
     selected = false;
     click_ready = false;
-    available_actions = ["walk"];
+    available_actions = ["walk", "car"];
     touch_padding = MAP_INTERVAL/4;
 
     menu;
@@ -105,8 +105,6 @@ class StaticLocation extends Location {
 
     constructor(x, y, name, image) {
         super(x, y);
-
-        this.name = name || "a location";
 
         // modify anchor
 
@@ -139,6 +137,13 @@ class StaticLocation extends Location {
         this.route_button.onclick = this.route_from_here.bind(this);
 
         this.objects_menu = menu.querySelector(".objects");
+
+        this.set_name(name || "a location");
+    }
+
+    set_name(name) {
+        this.name = name;
+        this.menu.querySelector("[name='name']").textContent = name;
     }
 
     add_object(object) {
@@ -161,28 +166,44 @@ class StaticLocation extends Location {
     }
 
     go_via(action) {
-        let segment;
+        let start = route_location || player.get_location();
+        let end = this;
+
+        let segments = [];
         switch (action) {
             case "walk":
-                segment = WalkSegment;
+                segments.push(new WalkSegment(start, end));
                 break;
             case "car":
-                segment = CarSegment;
+                let snapstart = snap_to_grid(start);
+                if (start.x != snapstart.x || start.y != snapstart.y) {
+                    let snapped_location = new Location(snapstart.x, snapstart.y);
+                    segments.push(new WalkSegment(start, snapped_location));
+                    start = snapped_location;
+                }
+                let snapend = snap_to_grid(end);
+                if (end.x != snapend.x || end.y != snapend.y) {
+                    let snapped_location = new Location(snapend.x, snapend.y);
+                    segments.push(new CarSegment(start, snapped_location));
+                    segments.push(new WalkSegment(snapped_location, end));
+                } else {
+                    segments.push(new CarSegment(start, end));
+                }
                 break;
             case "bus":
-                segment = BusSegment;
+                segments.push(new BusSegment(start, end));
                 break;
             case "train":
-                segment = TrainSegment;
+                segments.push(new TrainSegment(start, end));
                 break;
         }
 
-        segment = new segment(route_location || player.get_location(), this);
-
         if (!current_route || current_route.is_locked) {
-            set_current_route(new Route([segment]));
+            set_current_route(new Route(segments));
         } else {
-            current_route.add_segment(segment);
+            for (let segment of segments) {
+                current_route.add_segment(segment);
+            }
         }
 
         route_location = this;

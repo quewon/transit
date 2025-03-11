@@ -85,6 +85,13 @@ function point_in_rect(point, rect) {
 
 //v2 
 
+function snap_to_grid(v2) {
+    return {
+        x: Math.round(v2.x / MAP_INTERVAL) * MAP_INTERVAL,
+        y: Math.round(v2.y / MAP_INTERVAL) * MAP_INTERVAL
+    }
+}
+
 function position_to_canvas(v2) {
     return v2_mul(v2_add(v2, map_offset), map_zoom * dpi);
 }
