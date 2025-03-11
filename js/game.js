@@ -166,11 +166,7 @@ function init() {
     tick();
 }
 
-function init_level() {
-    const mission = MISSIONS[MISSIONS.length * Math.random() | 0];
-
-    // locations
-
+function generate_map(mission) {
     locations = [];
 
     const home = new StaticLocation(0, 0, "home", "res/locations/home.jpg");
@@ -197,6 +193,16 @@ function init_level() {
     }
     mission_location.set_name(mission.location);
     mission_location.menu.querySelector("img").src = mission.location_image;
+}
+
+function init_level() {
+    const mission = MISSIONS[MISSIONS.length * Math.random() | 0];
+
+    // locations
+
+    generate_map(mission);
+
+    const home = locations[0];
 
     // objects
 

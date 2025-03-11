@@ -140,6 +140,11 @@ class Player extends Traveler {
         if (selected_location) selected_location.show_window();
         ui.favicon.href = "res/icons/location-pin.svg";
         document.title = this.location.name;
+
+        this.vehicle.x = this.x;
+        this.vehicle.y = this.y;
+        this.vehicle.route = null;
+        this.vehicle = null;
     }
 
     onsegmentchange(segment) {
@@ -148,6 +153,7 @@ class Player extends Traveler {
         if (this.vehicle) {
             this.vehicle.x = this.x;
             this.vehicle.y = this.y;
+            this.vehicle.route = null;
             this.vehicle = null;
         }
 
@@ -219,7 +225,7 @@ class Car extends Traveler {
     hail() {
         if (v2_distance(player, this) > 0) {
             this.element.classList.remove("hidden");
-            this.follow();
+            if (following == player) this.follow();
         }
 
         let segments = [];
@@ -238,17 +244,13 @@ class Car extends Traveler {
             player.ride(this);
             this.element.classList.add("hidden");
             this.onarrive = () => {};
-            player.follow();
+            if (following == this) player.follow();
         }.bind(this);
     }
 }
 
-class Bus extends Car {
-    constructor() {
-
-    }
-
-    hail() {
-
+class Bus extends Traveler {
+    constructor(location) {
+        super(location);
     }
 }
