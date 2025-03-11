@@ -188,6 +188,11 @@ class Player extends Traveler {
 
 class Car extends Traveler {
     element;
+    particles;
+    bubble_timer = 0;
+    bubble_interval = 300;
+    bubbles = [];
+    bubble_lifespan = 900;
 
     constructor(location) {
         super(location);
@@ -201,11 +206,24 @@ class Car extends Traveler {
         this.element.onclick = this.follow.bind(this);
     }
 
+    traverse_route(route) {
+        super.traverse_route(route);
+    }
+
     draw() {
         if (!this.element.classList.contains("hidden")) {
             let position = canvas_to_screen(position_to_canvas(this));
             this.element.style.top = position.y + "px";
             this.element.style.left = position.x + "px";
+        }
+
+        if (map_zoom >= .5) {
+            context.fillStyle = palette.route;
+            for (let bubble of this.bubbles) {
+                let b = position_to_canvas(bubble.position);
+                draw_circle(b.x, b.y, (bubble.lifespan / this.bubble_lifespan) * 3);
+                context.fill();
+            }
         }
     }
 
@@ -220,6 +238,25 @@ class Car extends Traveler {
         }
 
         super.update(delta);
+
+        if (!this.element.classList.contains("hidden")) {
+            this.bubble_timer += delta * map_zoom;
+            if (this.bubble_timer >= this.bubble_interval) {
+                this.bubble_timer = 0;
+                this.bubbles.push({
+                    lifespan: this.bubble_lifespan,
+                    position: v2_copy(this)
+                });
+            }
+        }
+
+        for (let i=this.bubbles.length-1; i>=0; i--) {
+            let bubble = this.bubbles[i];
+            bubble.lifespan -= delta;
+            if (bubble.lifespan <= 0) {
+                this.bubbles.splice(i, 1);
+            }
+        }
     }
 
     hail() {
