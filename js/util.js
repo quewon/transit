@@ -85,7 +85,22 @@ function point_in_rect(point, rect) {
 
 //v2 
 
-function snap_to_grid(v2) {
+function snap_to_grid(v2, direction) {
+    if (direction) {
+        let v = v2_copy(v2);
+        if (direction.x <= 0) {
+            v.x = Math.floor(v.x / MAP_INTERVAL) * MAP_INTERVAL;
+        } else {
+            v.x = Math.ceil(v.x / MAP_INTERVAL) * MAP_INTERVAL;
+        }
+        if (direction.y <= 0) {
+            v.y = Math.floor(v.y / MAP_INTERVAL) * MAP_INTERVAL;
+        } else {
+            v.y = Math.ceil(v.y / MAP_INTERVAL) * MAP_INTERVAL;
+        }
+        return v;
+    }
+
     return {
         x: Math.round(v2.x / MAP_INTERVAL) * MAP_INTERVAL,
         y: Math.round(v2.y / MAP_INTERVAL) * MAP_INTERVAL

@@ -61,11 +61,12 @@ class Location {
         let p = position_to_canvas(this);
         draw_circle(p.x, p.y, this.r);
 
-        if (current_route && current_route.is_tentative && route_location == this && !current_route.contains(this)) {
-            context.fillStyle = palette.route;
-        } else if (player.location == this) {
+        if (player.x == this.x && player.y == this.y) {
             context.fillStyle = palette.player;
-        } else if (current_route && current_route.contains(this) || route_location == this) {
+        } else if (
+            (current_route && current_route.contains(this) || route_location == this) ||
+            (current_route && current_route.is_tentative && route_location == this && !current_route.contains(this))
+        ) {
             context.fillStyle = palette.route;
         } else if (player.route && player.route.contains(this)) {
             context.fillStyle = palette["route-locked"];

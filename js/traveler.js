@@ -221,7 +221,7 @@ class Car extends Traveler {
             context.fillStyle = palette.route;
             for (let bubble of this.bubbles) {
                 let b = position_to_canvas(bubble.position);
-                draw_circle(b.x, b.y, (bubble.lifespan / this.bubble_lifespan) * 3);
+                draw_circle(b.x, b.y, Math.max(bubble.lifespan / this.bubble_lifespan, .6) * 3);
                 context.fill();
             }
         }
@@ -267,7 +267,7 @@ class Car extends Traveler {
 
         let segments = [];
         let start = this.get_location();
-        let snapstart = snap_to_grid(start);
+        let snapstart = snap_to_grid(start, v2_sub(player, this));
         if (start.x != snapstart.x || start.y != snapstart.y) {
             let snapped_location = new Location(snapstart.x, snapstart.y);
             segments.push(new CarSegment(start, snapped_location));
