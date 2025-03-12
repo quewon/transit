@@ -1,7 +1,6 @@
 const MISSIONS = [
     {
         location: "airport",
-        location_image: "res/locations/airport.jpg",
         prompt: "from: boss<br>business in [redacted].<br>catch a flight before XX:XX.<br>don't be late.",
         icon: "res/icons/missions/plane.svg",
         title: "BUSINESS CALLS",
@@ -99,7 +98,7 @@ var current_route;
 
 var contacts;
 
-const MAP_RADIUS = 5;
+const MAP_RADIUS = 3;
 const MAP_INTERVAL = 50;
 const MAP_SMOOTH = .013;
 const MIN_ZOOM = .3;
@@ -169,30 +168,57 @@ function init() {
 function generate_map(mission) {
     locations = [];
 
-    const home = new StaticLocation(0, 0, "home", "res/locations/home.jpg");
-    locations.push(home);
+    // 5 random points
 
+    let points = [];
     for (let y=-MAP_RADIUS; y<=MAP_RADIUS; y++) {
         for (let x=-MAP_RADIUS; x<=MAP_RADIUS; x++) {
-            if (x == 0 && y == 0) continue;
             if (x * x + y * y > MAP_RADIUS * MAP_RADIUS) continue;
-            if (Math.random() > .2) continue;
+            points.push({ x: x, y: y });
+        }
+    }
+    shuffle_array(points);
+    points = points.slice(0, 4);
 
-            locations.push(new StaticLocation(
-                x*MAP_INTERVAL, 
-                y*MAP_INTERVAL
-            ));
+    var directions = [
+        { x: -1, y: -1 },
+        { x: -1, y: 0 },
+        { x: -1, y: 1 },
+        { x: 0, y: -1 },
+        { x: 0, y: 1 },
+        { x: 1, y: -1 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 }
+    ]
+
+    for (let step=0; step<MAP_RADIUS*1.5; step++) {
+        for (let i=points.length-1; i>=0; i--) {
+            let point = points[i];
+            let empty_neighbors = [];
+            for (let direction of directions) {
+                let neighbor = v2_add(point, direction);
+                if (!points.includes(neighbor)) {
+                    empty_neighbors.push(neighbor);
+                }
+            }
+            if (empty_neighbors.length > 0 && Math.random() > .5) {
+                let random_neighbor = empty_neighbors[empty_neighbors.length * Math.random() | 0];
+                points.push(random_neighbor);
+            }
         }
     }
 
+    for (let point of points) {
+        locations.push(new StaticLocation(point.x * MAP_INTERVAL, point.y * MAP_INTERVAL));
+    }
+    shuffle_array(locations);
+
+    locations[0].set_name("home");
+
     // create mission location
 
-    var mission_location = locations[locations.length * Math.random() | 0];
-    while (mission_location == home) {
-        mission_location = locations[locations.length * Math.random() | 0];
-    }
+    var mission_location = locations[1];
     mission_location.set_name(mission.location);
-    mission_location.menu.querySelector("img").src = mission.location_image;
 }
 
 function init_level() {
@@ -235,20 +261,23 @@ function init_level() {
         not_home.add_object(contacts[name]);
     }
 
+    // cars
+
+    cars = [];
+    for (let i=0; i<5; i++) {
+        cars.push(new Car(locations[Math.random() * locations.length | 0]));
+    }
+
     // player
 
     player = new Player(home);
+    jumpto(player);
 
     game_paused = false;
     game_timeouts = [];
     game_time = null;
     ui.timer.classList.add("hidden");
     ui.timer.textContent = get_time_string(mission.duration * 1000 * TIME_SCALE);
-
-    cars = [];
-    for (let i=0; i<5; i++) {
-        cars.push(new Car(locations[Math.random() * locations.length | 0]));
-    }
 }
 
 function tick() {

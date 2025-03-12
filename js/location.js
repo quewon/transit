@@ -104,7 +104,7 @@ class StaticLocation extends Location {
     clear_route_button;
     route_button;
 
-    constructor(x, y, name, image) {
+    constructor(x, y) {
         super(x, y);
 
         // modify anchor
@@ -114,7 +114,6 @@ class StaticLocation extends Location {
         // create menu
 
         let menu = copy_template("location-menu");
-        if (image) menu.querySelector("figure img").src = image;
 
         this.buttons = {
             "walk": menu.querySelector(".walk"),
@@ -138,13 +137,12 @@ class StaticLocation extends Location {
         this.route_button.onclick = this.route_from_here.bind(this);
 
         this.objects_menu = menu.querySelector(".objects");
-
-        this.set_name(name || "a location");
     }
 
     set_name(name) {
         this.name = name;
         this.menu.querySelector("[name='name']").textContent = name;
+        this.menu.querySelector("figure img").src = "res/locations/"+name.replaceAll(" ", "-")+".jpg";
     }
 
     add_object(object) {

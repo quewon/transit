@@ -141,10 +141,12 @@ class Player extends Traveler {
         ui.favicon.href = "res/icons/location-pin.svg";
         document.title = this.location.name;
 
-        this.vehicle.x = this.x;
-        this.vehicle.y = this.y;
-        this.vehicle.route = null;
-        this.vehicle = null;
+        if (this.vehicle) {
+            this.vehicle.x = this.x;
+            this.vehicle.y = this.y;
+            this.vehicle.route = null;
+            this.vehicle = null;
+        }
     }
 
     onsegmentchange(segment) {

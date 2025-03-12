@@ -59,6 +59,14 @@ function draw_circle(x, y, radius) {
 
 //math
 
+//durstenfeld
+function shuffle_array(array) {
+    for (let i = array.length - 1; i >= 0; i--) {
+        const j = Math.random() * (i + 1) | 0;
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 function clamp(min, v, max) {
     return Math.min(Math.max(v, min), max);
 }
