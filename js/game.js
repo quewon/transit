@@ -103,6 +103,7 @@ const MAP_INTERVAL = 50;
 const MAP_SMOOTH = .013;
 const MIN_ZOOM = .3;
 const MAX_ZOOM = 4;
+var ui_offset;
 var screen_offset;
 var dpi;
 var pixel_scale;
@@ -385,7 +386,7 @@ function draw() {
 
 function resize() {
     dpi = window.devicePixelRatio;
-    if (dpi >= 2) {
+    if (dpi >= 2 && screen.width <= 500) {
         pixel_scale = 1.7;
     } else {
         pixel_scale = 1;
@@ -394,6 +395,8 @@ function resize() {
     canvas.height = window.innerHeight * dpi;
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
+    let rect = ui.map.getBoundingClientRect();
+    ui_offset = { x: rect.left, y: rect.top };
     screen_offset = { x: canvas.width/2, y: canvas.height/2 };
     mouse = {
         x: Infinity, y: Infinity,

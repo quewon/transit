@@ -128,7 +128,7 @@ function screen_to_canvas(v2) {
 }
 
 function canvas_to_screen(v2) {
-    return v2_div(v2_add(v2, screen_offset), dpi);
+    return v2_sub(v2_div(v2_add(v2, screen_offset), dpi), ui_offset);
 }
 
 function jumpto(v2) {

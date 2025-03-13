@@ -10,13 +10,16 @@
     <title>in transit</title>
     <style>
         @font-face {
-            font-family: Geist;
-            src: url(res/font/GeistMono.ttf);
+            font-family: "Geist Mono";
+            src: url("res/font/GeistMono.ttf") format("truetype");
+            font-weight: 100 900;
+
         }
 
         :root {
             --gap: 1em;
             --icon-size: 1.75em;
+            --pixel-scale: 1;
 
             --background: white;
             --text: black;
@@ -25,7 +28,7 @@
             --player: red;
             --route: blue;
             --route-locked: var(--text);
-            --floater-border-color: rgba(0, 0, 0, .2);
+            --floater-border-color: var(--map-grid);
             --dialog-background: rgba(255, 255, 255, .7);
             --job-background: var(--map-grid);
 
@@ -38,7 +41,7 @@
         }
 
         body {
-            font-family: 'Geist', monospace;
+            font-family: 'Geist Mono', monospace;
             font-size: 14px;
             overflow: hidden;
             position: relative;
@@ -60,6 +63,23 @@
             left: 0;
         }
 
+        .ui-container {
+            position: absolute;
+            box-shadow: 0 0 200vh 200vh var(--map-grid);
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            max-height: 500px;
+            top: 50%;
+            left: 50%;
+            translate: -50% -50%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        #map * {
+            pointer-events: auto;
+        }
+
         .nametag {
             position: absolute;
             translate: -50% .5em;
@@ -78,7 +98,7 @@
         .location {
             position: absolute;
             background: var(--background);
-            border: 1px solid var(--text);
+            border: calc(1px * var(--pixel-scale)) solid var(--text);
             padding: .5em;
             translate: -50% calc(-100% - 1em);
             pointer-events: none;
@@ -142,7 +162,7 @@
             line-height: 0;
         }
         figure .iconbutton {
-            filter: drop-shadow(0 0 3px var(--background));
+            filter: drop-shadow(0 0 2px var(--background));
         }
 
         button {
@@ -188,7 +208,7 @@
             pointer-events: auto;
             background: var(--background);
             border-radius: 1em;
-            box-shadow: 0 0 3px var(--floater-border-color);
+            border: calc(1px * var(--pixel-scale)) solid var(--floater-border-color);
             padding: 5px;
         }
         #route-data, #segment-data {
@@ -314,7 +334,7 @@
 
         dialog {
             color: inherit;
-            border: 1px solid var(--text);
+            border: calc(1px * var(--pixel-scale)) solid var(--text);
             background: var(--background);
             padding: 1em;
             box-sizing: border-box;
@@ -354,16 +374,24 @@
             display: none !important;
         }
 
-        @media (-moz-min-device-pixel-ratio: 2), 
-               (-o-min-device-pixel-ratio: 2/1), 
-               (-webkit-min-device-pixel-ratio: 2), 
-               (min-device-pixel-ratio: 2) {
+        @media (-moz-min-device-pixel-ratio: 2) and (max-device-width: 500px), 
+               (-o-min-device-pixel-ratio: 2/1) and (max-device-width: 500px), 
+               (-webkit-min-device-pixel-ratio: 2) and (max-device-width: 500px), 
+               (min-device-pixel-ratio: 2) and (max-device-width: 500px) {
             :root {
                 --gap: .5em;
+                --pixel-scale: 1.7;
             }
 
             body {
                 font-size: 20px;
+            }
+
+            .ui-container {
+                position: absolute;
+                box-shadow: none;
+                max-width: unset;
+                max-height: unset;
             }
         }
     </style>
@@ -372,66 +400,68 @@
     
     <canvas id="canvas"></canvas>
 
-    <div id="map">
+    <div id="map" class="ui-container">
 
     </div>
 
-    <div id="location-menus">
+    <div id="location-menus" class="ui-container">
 
     </div>
 
-    <aside>
-        <div id="current-location" class="floater hidden">
-            <button class="iconbutton" onclick="player.follow()">
-                <img src="res/icons/my-location.svg" title="jump to current location">
-            </button>
-        </div>
-
-        <div id="current-player-route" class="floater hidden">
-            <button class="iconbutton" onclick="set_current_route(player.route)">
-                <img src="res/icons/plane-black.svg" title="show current route">
-            </button>
-        </div>
-    </aside>
-
-    <header>
-        <div class="data-container">
-            <div id="route-data" class="floater hidden">
-                <button class="iconbutton" onclick="set_current_route()">
-                    <img src="res/icons/close.svg" title="clear route">
+    <div class="ui-container">
+        <aside>
+            <div id="current-location" class="floater hidden">
+                <button class="iconbutton" onclick="player.follow()">
+                    <img src="res/icons/my-location.svg" title="jump to current location">
                 </button>
-                <div class="info">
-                    <a>
-                        <img src="res/icons/circle.svg">
-                        <span>location</span>
-                    </a>
-                    <img src="res/icons/dots-horizontal.svg">
-                    <a>
-                        <img src="res/icons/location-pin.svg">
-                        <span>location</span>
-                    </a>
-                    <div class="duration-estimate"></div>
+            </div>
+    
+            <div id="current-player-route" class="floater hidden">
+                <button class="iconbutton" onclick="set_current_route(player.route)">
+                    <img src="res/icons/plane-black.svg" title="show current route">
+                </button>
+            </div>
+        </aside>
+    
+        <header>
+            <div class="data-container">
+                <div id="route-data" class="floater hidden">
+                    <button class="iconbutton" onclick="set_current_route()">
+                        <img src="res/icons/close.svg" title="clear route">
+                    </button>
+                    <div class="info">
+                        <a>
+                            <img src="res/icons/circle.svg">
+                            <span>location</span>
+                        </a>
+                        <img src="res/icons/dots-horizontal.svg">
+                        <a>
+                            <img src="res/icons/location-pin.svg">
+                            <span>location</span>
+                        </a>
+                        <div class="duration-estimate"></div>
+                    </div>
+                </div>
+                <div id="segment-data" class="floater hidden">
+                    <button class="iconbutton" onclick="current_route.focused_segment.unfocus()">
+                        <img src="res/icons/back-arrow.svg" title="back to route">
+                    </button>
+                    <div class="floater info"></div>
+                </div>
+                <div id="timer-container">
+                    <div id="timer">00:00</div>
                 </div>
             </div>
-            <div id="segment-data" class="floater hidden">
-                <button class="iconbutton" onclick="current_route.focused_segment.unfocus()">
-                    <img src="res/icons/back-arrow.svg" title="back to route">
-                </button>
-                <div class="floater info"></div>
+            <div class="flex-container">
+                <div id="route" class="floater hidden">
+                    <div class="segments"></div>
+                    <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
+                        <img src="res/icons/plane.svg" title="go!">
+                    </button>
+                </div>
             </div>
-            <div id="timer-container">
-                <div id="timer">00:00</div>
-            </div>
-        </div>
-        <div class="flex-container">
-            <div id="route" class="floater hidden">
-                <div class="segments"></div>
-                <button id="go-button" class="iconbutton" onclick="player.traverse_route(current_route)">
-                    <img src="res/icons/plane.svg" title="go!">
-                </button>
-            </div>
-        </div>
-    </header>
+        </header>
+    </div>
 
     <dialog id="alert">
         <button class="close iconbutton" onclick="this.parentElement.close()">
