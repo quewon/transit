@@ -376,7 +376,9 @@
             display: none !important;
         }
 
-        @media (min-device-pixel-ratio: 2) and (max-device-width: 600px) {
+        @media (min-device-pixel-ratio: 2) and (max-device-width: 600px),
+               (min--moz-device-pixel-ratio: 2) and (max-device-width: 600px),
+               (-webkit-min-device-pixel-ratio: 2) and (max-device-width: 600px) {
             :root {
                 --gap: .5em;
                 --pixel-scale: 1.7;
@@ -387,7 +389,8 @@
             }
         }
 
-        @media (max--moz-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
+        @media (max-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
+               (max--moz-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
                (-webkit-max-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
                (max-device-width: 600px) {
             .ui-container {
