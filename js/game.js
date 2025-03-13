@@ -342,8 +342,8 @@ function draw_grid() {
         x: map_offset.x % interval,
         y: map_offset.y % interval
     }
-    let height = Math.round(window.innerHeight / 2 / map_zoom / interval) * interval;
-    let width = Math.round(window.innerWidth / 2 / map_zoom / interval) * interval;
+    let height = Math.ceil(window.innerHeight / 2 / map_zoom / interval) * interval;
+    let width = Math.ceil(window.innerWidth / 2 / map_zoom / interval) * interval;
     let dots_radius = Math.min(map_zoom*2, 2);
     context.fillStyle = palette["map-grid"];
     for (let y=-height; y<=height; y+=interval) {
@@ -386,7 +386,7 @@ function draw() {
 
 function resize() {
     dpi = window.devicePixelRatio;
-    if (dpi >= 2 && screen.width <= 500) {
+    if (dpi >= 2 && screen.width <= 600) {
         pixel_scale = 1.7;
     } else {
         pixel_scale = 1;
