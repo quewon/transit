@@ -65,7 +65,6 @@
 
         .ui-container {
             position: absolute;
-            box-shadow: 0 0 200vh 200vh var(--map-grid);
             width: 100%;
             height: 100%;
             max-width: 500px;
@@ -78,6 +77,9 @@
         }
         #map * {
             pointer-events: auto;
+        }
+        #game-border {
+            box-shadow: 0 0 200vh 200vh var(--map-grid);
         }
 
         .nametag {
@@ -374,10 +376,7 @@
             display: none !important;
         }
 
-        @media (-moz-min-device-pixel-ratio: 2) and (max-device-width: 500px), 
-               (-o-min-device-pixel-ratio: 2/1) and (max-device-width: 500px), 
-               (-webkit-min-device-pixel-ratio: 2) and (max-device-width: 500px), 
-               (min-device-pixel-ratio: 2) and (max-device-width: 500px) {
+        @media (min-device-pixel-ratio: 2) and (max-device-width: 600px) {
             :root {
                 --gap: .5em;
                 --pixel-scale: 1.7;
@@ -386,10 +385,13 @@
             body {
                 font-size: 20px;
             }
+        }
 
+        @media (max--moz-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
+               (-webkit-max-device-pixel-ratio: 1.5) and (max-device-width: 1000px) and (max-device-height: 1000px),
+               (max-device-width: 600px) {
             .ui-container {
                 position: absolute;
-                box-shadow: none;
                 max-width: unset;
                 max-height: unset;
             }
@@ -461,6 +463,10 @@
                 </div>
             </div>
         </header>
+    </div>
+
+    <div class="ui-container" id="game-border">
+
     </div>
 
     <dialog id="alert">
